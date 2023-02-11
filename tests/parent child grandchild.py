@@ -1,22 +1,7 @@
 ## NOTES FROM THIS EXAMPLE
 
-## Duplicate button is greyed out for all, if 1 selector has none.
-## Delete button is greyed out for all, if 1 selector has none.
-
 ## Delete from parent, only cascades to child. Grandchildren are not deleted
 ## Duplicate from parent, only cascades to child. Grandchildren are not duplicated
-
-## If 1 selector has is spelled '_selbike_',
-## then another selector can't be spelled '_selbike_repair_'.
-## _selbikerepair_ works though.
-
-## Pysimplesql assumes pk tables start at 0. Dbbrowser autoincrements from 1.
-## If yours start at 1, place a fmr[query].requery() on the first focused selector table
-## Place after frm=ss.Form(':memory:',sql_commands=sql, bind=window)
-## Or their children records arnt show initially.
-
-## save_record button, uses save_records, defaulting to save changes on all forms.
-## eg, def save_records(self, cascade_only=False):
 
 grandchild = True ### set this to False to only be parent/child
 
