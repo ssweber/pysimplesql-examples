@@ -19,10 +19,20 @@ CREATE TABLE IF NOT EXISTS "bike_repair" (
 	"bike_id"	INTEGER NOT NULL,
 	FOREIGN KEY("bike_id") REFERENCES "bike"("id") ON UPDATE CASCADE,
 	PRIMARY KEY("id" AUTOINCREMENT)
+);
+CREATE TABLE IF NOT EXISTS "style" (
+	"id"	INTEGER NOT NULL,
+	"name"	TEXT NOT NULL DEFAULT 'Bike Repair Placeholder',
+	"example"	INTEGER NOT NULL DEFAULT 0,
+	"bike_repair_id"	INTEGER NOT NULL,
+	FOREIGN KEY("bike_repair_id") REFERENCES "bike_repair"("id") ON UPDATE CASCADE,
+	PRIMARY KEY("id" AUTOINCREMENT)
 );"""
 sql_grandchild_insert = """
 INSERT INTO "bike_repair" VALUES (1,'Wheel Repair',1,1);
 INSERT INTO "bike_repair" VALUES (2,'Seat Repair',1,1);
+INSERT INTO "style" VALUES (1,'Basic',1,1);
+INSERT INTO "style" VALUES (2,'Premium',1,1);
 """
 
 if not grandchild:
@@ -134,6 +144,21 @@ bike_repair_layout = [
     [ss.actions('_actrepair_','bike_repair',default=True)],
 ]
 
+# style
+# -------------------------
+# Define the columns for the table selector
+style_headings=['id    ','Name             ','example']
+style_visible=[enable_id,1,1]
+style_layout = [
+    [sg.HorizontalSeparator()],
+    [sg.Text('Grandgrandchild')],
+    ## BUG - see this in action by renaming to _selbike_repair_
+    [ss.selector('_selstyle_','style',sg.Table,num_rows=4,headings=style_headings,visible_column_map=style_visible,auto_size_columns=False)],
+    [ss.record('style.name'), ss.record('style.example')],
+    [ss.record('style.bike_repair_id', sg.Combo)],
+    [ss.actions('_actstyle_','style',default=True)],
+]
+
 # -------------------------
 # Main Layout
 # -------------------------
@@ -142,7 +167,7 @@ layout = [[sg.Button('Form Prompt_Save', key='save')]]
 layout.append(person_layout)
 layout.append([sg.Col(car_layout, size=sz), sg.Col(bike_layout, size=sz)])
 if grandchild: 
-    layout.append(bike_repair_layout)
+    layout.append([sg.Col(bike_repair_layout, size=sz), sg.Col(style_layout, size=sz)])
 
 window=sg.Window('People and Vehicals', layout, finalize=True, grab_anywhere=True)
 
