@@ -3,12 +3,13 @@
 ## Delete from parent, only cascades to child. Grandchildren are not deleted
 ## Duplicate from parent, only cascades to child. Grandchildren are not duplicated
 
-grandchild = True ### set this to False to only be parent/child
+grandchild = True  ### set this to False to only be parent/child
 
-import PySimpleGUI as sg ## pysimplegui 4.60.4
+import PySimpleGUI as sg  ## pysimplegui 4.60.4
 import pysimplesql as ss
 import logging
-logger=logging.getLogger(__name__)
+
+logger = logging.getLogger(__name__)
 logging.basicConfig(level=logging.INFO)
 
 sql_grandchild = """
@@ -74,12 +75,14 @@ INSERT INTO "person" VALUES (2,'Jessica',0);
 INSERT INTO "person" VALUES (3,'Polly',0);
 {sql_grandchild_insert}
 """
-sz=(600,250)
-logger=logging.getLogger(__name__)
-logging.basicConfig(level=logging.INFO)               # <=== You can set the logging level here (NOTSET,DEBUG,INFO,WARNING,ERROR,CRITICAL)
-_tabs_ = '-TABGROUP-'
+sz = (600, 250)
+logger = logging.getLogger(__name__)
+logging.basicConfig(
+    level=logging.INFO
+)  # <=== You can set the logging level here (NOTSET,DEBUG,INFO,WARNING,ERROR,CRITICAL)
+_tabs_ = "-TABGROUP-"
 
-quick_editor=True #quick_editor=quick_editor
+quick_editor = True  # quick_editor=quick_editor
 enable_id = 0
 
 # -------------------------
@@ -91,14 +94,14 @@ enable_id = 0
 # -------------------------
 
 # Define the columns for the table selector
-person_headings=['id    ','Name             ','example']
-person_visible=[enable_id,1,1]
+person_headings = ["id    ", "Name             ", "example"]
+person_visible = [enable_id, 1, 1]
 person_layout = [
-    [sg.Text('Parent')],
-#    [ss.selector('_selPerson_','person',sg.Table,num_rows=4,headings=person_headings,visible_column_map=person_visible,auto_size_columns=True)],
-    [ss.selector('_selPerson_','person',sg.Combo)],
-    [ss.record('person.name'), ss.record('person.example', sg.Checkbox)],
-    [ss.actions('_actPerson_','person',default=True)],
+    [sg.Text("Parent")],
+    #    [ss.selector('_selPerson_','person',sg.Table,num_rows=4,headings=person_headings,visible_column_map=person_visible,auto_size_columns=True)],
+    [ss.selector("_selPerson_", "person", sg.Combo)],
+    [ss.record("person.name"), ss.record("person.example", sg.Checkbox)],
+    [ss.actions("_actPerson_", "person", default=True)],
     [sg.HorizontalSeparator()],
 ]
 
@@ -106,76 +109,124 @@ person_layout = [
 # car
 # -------------------------
 # Define the columns for the table selector
-car_headings=['id    ','Name             ','example']
-car_visible=[enable_id,1,1]
+car_headings = ["id    ", "Name             ", "example"]
+car_visible = [enable_id, 1, 1]
 car_layout = [
-    [sg.Text('Child')],
-    [ss.selector('_selcar_','car',sg.Table,num_rows=4,headings=car_headings,visible_column_map=car_visible,auto_size_columns=False)],
-    [ss.record('car.name'), ss.record('car.example', sg.Checkbox)],
-    [ss.record('car.person_id', sg.Combo),],
-    [ss.actions('_actcar_','car',default=True)],
+    [sg.Text("Child")],
+    [
+        ss.selector(
+            "_selcar_",
+            "car",
+            sg.Table,
+            num_rows=4,
+            headings=car_headings,
+            visible_column_map=car_visible,
+            auto_size_columns=False,
+        )
+    ],
+    [ss.record("car.name"), ss.record("car.example", sg.Checkbox)],
+    [
+        ss.record("car.person_id", sg.Combo),
+    ],
+    [ss.actions("_actcar_", "car", default=True)],
 ]
 
 # bike
 # -------------------------
 # Define the columns for the table selector
-bike_headings=['id    ','Name             ','example']
-bike_visible=[enable_id,1,1]
+bike_headings = ["id    ", "Name             ", "example"]
+bike_visible = [enable_id, 1, 1]
 bike_layout = [
-    [sg.Text('Child/Sibling')],
-    [ss.selector('_selbike_','bike',sg.Table,num_rows=4,headings=bike_headings,visible_column_map=bike_visible,auto_size_columns=False)],
-    [ss.record('bike.name'), ss.record('bike.example', sg.Checkbox)],
-    [ss.record('bike.person_id', sg.Combo)],
-    [ss.actions('_actbike_','bike',default=True)],
+    [sg.Text("Child/Sibling")],
+    [
+        ss.selector(
+            "_selbike_",
+            "bike",
+            sg.Table,
+            num_rows=4,
+            headings=bike_headings,
+            visible_column_map=bike_visible,
+            auto_size_columns=False,
+        )
+    ],
+    [ss.record("bike.name"), ss.record("bike.example", sg.Checkbox)],
+    [ss.record("bike.person_id", sg.Combo)],
+    [ss.actions("_actbike_", "bike", default=True)],
 ]
 
 # bike_repair
 # -------------------------
 # Define the columns for the table selector
-bike_repair_headings=['id    ','Name             ','example']
-bike_repair_visible=[enable_id,1,1]
+bike_repair_headings = ["id    ", "Name             ", "example"]
+bike_repair_visible = [enable_id, 1, 1]
 bike_repair_layout = [
     [sg.HorizontalSeparator()],
-    [sg.Text('Grandchild')],
+    [sg.Text("Grandchild")],
     ## BUG - see this in action by renaming to _selbike_repair_
-    [ss.selector('_selbikerepair_','bike_repair',sg.Table,num_rows=4,headings=bike_repair_headings,visible_column_map=bike_repair_visible,auto_size_columns=False)],
-    [ss.record('bike_repair.name'), ss.record('bike_repair.example')],
-    [ss.record('bike_repair.bike_id', sg.Combo)],
-    [ss.actions('_actrepair_','bike_repair',default=True)],
+    [
+        ss.selector(
+            "_selbikerepair_",
+            "bike_repair",
+            sg.Table,
+            num_rows=4,
+            headings=bike_repair_headings,
+            visible_column_map=bike_repair_visible,
+            auto_size_columns=False,
+        )
+    ],
+    [ss.record("bike_repair.name"), ss.record("bike_repair.example")],
+    [ss.record("bike_repair.bike_id", sg.Combo)],
+    [ss.actions("_actrepair_", "bike_repair", default=True)],
 ]
 
 # style
 # -------------------------
 # Define the columns for the table selector
-style_headings=['id    ','Name             ','example']
-style_visible=[enable_id,1,1]
+style_headings = ["id    ", "Name             ", "example"]
+style_visible = [enable_id, 1, 1]
 style_layout = [
     [sg.HorizontalSeparator()],
-    [sg.Text('Grandgrandchild')],
+    [sg.Text("Grandgrandchild")],
     ## BUG - see this in action by renaming to _selbike_repair_
-    [ss.selector('_selstyle_','style',sg.Table,num_rows=4,headings=style_headings,visible_column_map=style_visible,auto_size_columns=False)],
-    [ss.record('style.name'), ss.record('style.example')],
-    [ss.record('style.bike_repair_id', sg.Combo)],
-    [ss.actions('_actstyle_','style',default=True)],
+    [
+        ss.selector(
+            "_selstyle_",
+            "style",
+            sg.Table,
+            num_rows=4,
+            headings=style_headings,
+            visible_column_map=style_visible,
+            auto_size_columns=False,
+        )
+    ],
+    [ss.record("style.name"), ss.record("style.example")],
+    [ss.record("style.bike_repair_id", sg.Combo)],
+    [ss.actions("_actstyle_", "style", default=True)],
 ]
 
 # -------------------------
 # Main Layout
 # -------------------------
 
-layout = [[sg.Button('Form Prompt_Save', key='save')]]
+layout = [[sg.Button("Form Prompt_Save", key="save")]]
 layout.append(person_layout)
 layout.append([sg.Col(car_layout, size=sz), sg.Col(bike_layout, size=sz)])
-if grandchild: 
+if grandchild:
     layout.append([sg.Col(bike_repair_layout, size=sz), sg.Col(style_layout, size=sz)])
 
-window=sg.Window('People and Vehicals', layout, finalize=True, grab_anywhere=True)
+window = sg.Window(
+    "People and Vehicals",
+    layout,
+    finalize=True,
+    grab_anywhere=True,
+    alpha_channel=0,
+)
 
-frm=ss.Form(':memory:',sql_commands=sql, bind=window)   #<=== Here is the magic!
-
-frm['person'].requery() ## Must requery the first focused selector table because DBBROWSER created pk to start 
+frm = ss.Form(":memory:", sql_commands=sql, bind=window)  # <=== Here is the magic!
 
 frm.set_prompt_save(True)
+
+window.SetAlpha(1)
 
 # ---------
 # MAIN LOOP
@@ -183,16 +234,16 @@ frm.set_prompt_save(True)
 
 while True:
     event, values = window.read()
-    if ss.process_events(event, values):                  # <=== let PySimpleSQL process its own events! Simple!
-        logger.info(f'PySimpleDB event handler handled the event {event}!')
+    if ss.process_events(
+        event, values
+    ):  # <=== let PySimpleSQL process its own events! Simple!
+        logger.info(f"PySimpleDB event handler handled the event {event}!")
         # handle button clicks
-    elif event in (sg.WIN_CLOSED, 'Exit', '-ESCAPE-'):
-        frm.close()              # <= ensures proper closing of the sqlite database and runs a database optimization
+    elif event in (sg.WIN_CLOSED, "Exit", "-ESCAPE-"):
+        frm.close()  # <= ensures proper closing of the sqlite database and runs a database optimization
         window.close()
         break
-    elif event=='save':
-        frm.prompt_save() # Prompt save when tabs change
+    elif event == "save":
+        frm.prompt_save()  # Prompt save when tabs change
     else:
-        logger.info(f'This event ({event}) is not yet handled.')
-        
-        
+        logger.info(f"This event ({event}) is not yet handled.")
