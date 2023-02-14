@@ -187,7 +187,7 @@ while True:
         logger.info(f'PySimpleDB event handler handled the event {event}!')
         # handle button clicks
     elif event in (sg.WIN_CLOSED, 'Exit', '-ESCAPE-'):
-        frm=None              # <= ensures proper closing of the sqlite database and runs a database optimization
+        frm.close()              # <= ensures proper closing of the sqlite database and runs a database optimization
         window.close()
         break
     elif event=='save':
