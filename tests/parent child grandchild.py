@@ -222,7 +222,8 @@ window = sg.Window(
     alpha_channel=0,
 )
 
-frm = ss.Form(":memory:", sql_commands=sql, bind=window)  # <=== Here is the magic!
+driver = ss.Sqlite(':memory:',sql_commands=sql) # Create a new database connection
+frm=ss.Form(driver, bind=window) #<=== Here is the magic!
 
 frm.set_prompt_save(True)
 
