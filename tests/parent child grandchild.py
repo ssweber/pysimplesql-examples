@@ -109,6 +109,7 @@ building_layout = [
     [ss.selector("_selBuilding_", "building", sg.Combo)],
     [ss.record("building.name"), ss.record("building.example", sg.Checkbox)],
     [ss.actions("_actBuilding_", "building", default=True)],
+    [sg.HorizontalSeparator()],
 ]
 
 # Person
@@ -241,8 +242,8 @@ window = sg.Window(
     alpha_channel=0,
 )
 
-driver = ss.Sqlite(':memory:',sql_commands=sql) # Create a new database connection
-frm=ss.Form(driver, bind=window) #<=== Here is the magic!
+driver = ss.Sqlite(":memory:", sql_commands=sql)  # Create a new database connection
+frm = ss.Form(driver, bind=window)  # <=== Here is the magic!
 
 frm.set_prompt_save(True)
 
