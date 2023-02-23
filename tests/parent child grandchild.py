@@ -63,6 +63,12 @@ CREATE TABLE IF NOT EXISTS "person" (
 	"example"	INTEGER NOT NULL DEFAULT 0,
 	PRIMARY KEY("id" AUTOINCREMENT)
 );
+CREATE TABLE IF NOT EXISTS "building" (
+	"id"	INTEGER NOT NULL,
+	"name"	TEXT DEFAULT 'Building Placeholder',
+	"example"	INTEGER NOT NULL DEFAULT 0,
+	PRIMARY KEY("id" AUTOINCREMENT)
+);
 {sql_grandchild}
 INSERT INTO "car" VALUES (1,'Soul',1,1);
 INSERT INTO "car" VALUES (2,'Jeep',1,2);
@@ -73,6 +79,9 @@ INSERT INTO "bike" VALUES (3,'Mountain',1,3);
 INSERT INTO "person" VALUES (1,'Bill',0);
 INSERT INTO "person" VALUES (2,'Jessica',0);
 INSERT INTO "person" VALUES (3,'Polly',0);
+INSERT INTO "building" VALUES (1,'Tower',0);
+INSERT INTO "building" VALUES (2,'Mall',0);
+INSERT INTO "building" VALUES (3,'Cabin',0);
 {sql_grandchild_insert}
 """
 sz = (600, 250)
@@ -89,6 +98,18 @@ enable_id = 0
 # CREATE PYSIMPLEGUI LAYOUT
 # -------------------------
 
+# Building
+# -------------------------
+
+# Define the columns for the table selector
+building_headings = ["id    ", "Name             ", "example"]
+building_visible = [enable_id, 1, 1]
+building_layout = [
+    [sg.Text("Childless Parent")],
+    [ss.selector("_selBuilding_", "building", sg.Combo)],
+    [ss.record("building.name"), ss.record("building.example", sg.Checkbox)],
+    [ss.actions("_actBuilding_", "building", default=True)],
+]
 
 # Person
 # -------------------------
@@ -112,7 +133,7 @@ person_layout = [
 car_headings = ["id    ", "Name             ", "example"]
 car_visible = [enable_id, 1, 1]
 car_layout = [
-    [sg.Text("Child")],
+    [sg.Text("Person Child/ Bike Sibling")],
     [
         ss.selector(
             "_selcar_",
@@ -137,7 +158,7 @@ car_layout = [
 bike_headings = ["id    ", "Name             ", "example"]
 bike_visible = [enable_id, 1, 1]
 bike_layout = [
-    [sg.Text("Child/Sibling")],
+    [sg.Text("Person Child/ Car Sibling")],
     [
         ss.selector(
             "_selbike_",
@@ -161,8 +182,7 @@ bike_repair_headings = ["id    ", "Name             ", "example"]
 bike_repair_visible = [enable_id, 1, 1]
 bike_repair_layout = [
     [sg.HorizontalSeparator()],
-    [sg.Text("Grandchild")],
-    ## BUG - see this in action by renaming to _selbike_repair_
+    [sg.Text("Bike child, Person Grandchild")],
     [
         ss.selector(
             "_selbikerepair_",
@@ -186,8 +206,7 @@ style_headings = ["id    ", "Name             ", "example"]
 style_visible = [enable_id, 1, 1]
 style_layout = [
     [sg.HorizontalSeparator()],
-    [sg.Text("Grandgrandchild")],
-    ## BUG - see this in action by renaming to _selbike_repair_
+    [sg.Text("BikeRepair Child, Person Grandgrandchild")],
     [
         ss.selector(
             "_selstyle_",
@@ -209,8 +228,8 @@ style_layout = [
 # -------------------------
 
 layout = [[sg.Button("Form Prompt_Save", key="save")]]
-layout.append(person_layout)
-layout.append([sg.Col(car_layout, size=sz), sg.Col(bike_layout, size=sz)])
+layout.append([sg.Col(person_layout, size=sz), sg.Col(building_layout, size=sz)])
+layout.append([sg.Col(bike_layout, size=sz), sg.Col(car_layout, size=sz)])
 if grandchild:
     layout.append([sg.Col(bike_repair_layout, size=sz), sg.Col(style_layout, size=sz)])
 
