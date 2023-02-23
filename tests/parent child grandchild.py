@@ -174,7 +174,7 @@ bike_repair_layout = [
             auto_size_columns=False,
         )
     ],
-    [ss.record("bike_repair.name"), ss.record("bike_repair.example")],
+    [ss.record("bike_repair.name"), ss.record("bike_repair.example", sg.Checkbox)],
     [ss.record("bike_repair.bike_id", sg.Combo)],
     [ss.actions("_actrepair_", "bike_repair", default=True)],
 ]
@@ -199,7 +199,7 @@ style_layout = [
             auto_size_columns=False,
         )
     ],
-    [ss.record("style.name"), ss.record("style.example")],
+    [ss.record("style.name"), ss.record("style.example", sg.Checkbox)],
     [ss.record("style.bike_repair_id", sg.Combo)],
     [ss.actions("_actstyle_", "style", default=True)],
 ]
