@@ -8,6 +8,8 @@ grandchild = True  ### set this to False to only be parent/child
 import PySimpleGUI as sg  ## pysimplegui 4.60.4
 import pysimplesql as ss
 import logging
+import timeit
+import time
 
 logger = logging.getLogger(__name__)
 logging.basicConfig(level=logging.INFO)
@@ -228,7 +230,7 @@ style_layout = [
 # Main Layout
 # -------------------------
 
-layout = [[sg.Button("Form Prompt_Save", key="save")]]
+layout = [[sg.Button("Form Prompt_Save", key="save")],[sg.Button("Timeit", key="-timeit-")]]
 layout.append([sg.Col(person_layout, size=sz), sg.Col(building_layout, size=sz)])
 layout.append([sg.Col(bike_layout, size=sz), sg.Col(car_layout, size=sz)])
 if grandchild:
@@ -248,7 +250,13 @@ frm = ss.Form(driver, bind=window)  # <=== Here is the magic!
 frm.set_prompt_save(True)
 
 window.SetAlpha(1)
+print('start')
 
+def test_set_by_pk(number):
+    for i in range(number):
+        frm['person'].set_by_pk(2)
+        frm['person'].set_by_pk(1)
+    
 # ---------
 # MAIN LOOP
 # ---------
@@ -266,5 +274,11 @@ while True:
         break
     elif event == "save":
         frm.prompt_save()  # Prompt save when tabs change
+    elif event == "-timeit-":    
+        st = time.time()
+        test_set_by_pk(50)
+        et = time.time()
+        elapsed_time = et - st
+        print(elapsed_time)
     else:
         logger.info(f"This event ({event}) is not yet handled.")
