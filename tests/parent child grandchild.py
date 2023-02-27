@@ -11,8 +11,16 @@ import logging
 import timeit
 import time
 
+sz = (600, 250)
 logger = logging.getLogger(__name__)
-logging.basicConfig(level=logging.INFO)
+logging.basicConfig(
+    level=logging.INFO
+)  # <=== You can set the logging level here (NOTSET,DEBUG,INFO,WARNING,ERROR,CRITICAL)
+_tabs_ = "-TABGROUP-"
+
+quick_editor = True  # quick_editor=quick_editor
+enable_id = 0
+tables = True
 
 sql_grandchild = """
 CREATE TABLE IF NOT EXISTS "bike_repair" (
@@ -86,15 +94,6 @@ INSERT INTO "building" VALUES (2,'Mall',0);
 INSERT INTO "building" VALUES (3,'Cabin',0);
 {sql_grandchild_insert}
 """
-sz = (600, 250)
-logger = logging.getLogger(__name__)
-logging.basicConfig(
-    level=logging.INFO
-)  # <=== You can set the logging level here (NOTSET,DEBUG,INFO,WARNING,ERROR,CRITICAL)
-_tabs_ = "-TABGROUP-"
-
-quick_editor = True  # quick_editor=quick_editor
-enable_id = 0
 
 # -------------------------
 # CREATE PYSIMPLEGUI LAYOUT
@@ -104,11 +103,16 @@ enable_id = 0
 # -------------------------
 
 # Define the columns for the table selector
-building_headings = ["id    ", "Name             ", "example"]
-building_visible = [enable_id, 1, 1]
+if tables:
+    building_headings = ["id    ", "Name             ", "example"]
+    building_visible = [enable_id, 1, 1]
+    selector = [ss.selector('_selBuilding_','building',sg.Table,num_rows=4,headings=building_headings,visible_column_map=building_visible,auto_size_columns=True)]
+else:
+    selector = [ss.selector("_selBuilding_", "building", sg.Combo)]
+
 building_layout = [
     [sg.Text("Childless Parent")],
-    [ss.selector("_selBuilding_", "building", sg.Combo)],
+    selector,
     [ss.record("building.name"), ss.record("building.example", sg.Checkbox)],
     [ss.actions("_actBuilding_", "building", default=True)],
     [sg.HorizontalSeparator()],
@@ -116,14 +120,16 @@ building_layout = [
 
 # Person
 # -------------------------
-
+if tables:
+    person_headings = ["id    ", "Name             ", "example"]
+    person_visible = [enable_id, 1, 1]
+    selector = [ss.selector('_selPerson_','person',sg.Table,num_rows=4,headings=person_headings,visible_column_map=person_visible,auto_size_columns=True)]
+else:
+    selector = [ss.selector("_selPerson_", "person", sg.Combo)]
 # Define the columns for the table selector
-person_headings = ["id    ", "Name             ", "example"]
-person_visible = [enable_id, 1, 1]
 person_layout = [
     [sg.Text("Parent")],
-    #    [ss.selector('_selPerson_','person',sg.Table,num_rows=4,headings=person_headings,visible_column_map=person_visible,auto_size_columns=True)],
-    [ss.selector("_selPerson_", "person", sg.Combo)],
+    selector,
     [ss.record("person.name"), ss.record("person.example", sg.Checkbox)],
     [ss.actions("_actPerson_", "person", default=True)],
     [sg.HorizontalSeparator()],
@@ -133,21 +139,15 @@ person_layout = [
 # car
 # -------------------------
 # Define the columns for the table selector
-car_headings = ["id    ", "Name             ", "example"]
-car_visible = [enable_id, 1, 1]
+if tables:
+    car_headings = ["id    ", "Name             ", "example"]
+    car_visible = [enable_id, 1, 1]
+    selector = [ss.selector('_selCar_','car',sg.Table,num_rows=4,headings=car_headings,visible_column_map=car_visible,auto_size_columns=True)]
+else:
+    selector = [ss.selector("_selCar_", "car", sg.Combo)]
 car_layout = [
     [sg.Text("Person Child/ Bike Sibling")],
-    [
-        ss.selector(
-            "_selcar_",
-            "car",
-            sg.Table,
-            num_rows=4,
-            headings=car_headings,
-            visible_column_map=car_visible,
-            auto_size_columns=False,
-        )
-    ],
+    selector,
     [ss.record("car.name"), ss.record("car.example", sg.Checkbox)],
     [
         ss.record("car.person_id", sg.Combo),
@@ -158,21 +158,15 @@ car_layout = [
 # bike
 # -------------------------
 # Define the columns for the table selector
-bike_headings = ["id    ", "Name             ", "example"]
-bike_visible = [enable_id, 1, 1]
+if tables:
+    bike_headings = ["id    ", "Name             ", "example"]
+    bike_visible = [enable_id, 1, 1]
+    selector = [ss.selector('_selBike_','bike',sg.Table,num_rows=4,headings=bike_headings,visible_column_map=bike_visible,auto_size_columns=True)]
+else:
+    selector = [ss.selector("_selBike_", "bike", sg.Combo)]
 bike_layout = [
     [sg.Text("Person Child/ Car Sibling")],
-    [
-        ss.selector(
-            "_selbike_",
-            "bike",
-            sg.Table,
-            num_rows=4,
-            headings=bike_headings,
-            visible_column_map=bike_visible,
-            auto_size_columns=False,
-        )
-    ],
+    selector,
     [ss.record("bike.name"), ss.record("bike.example", sg.Checkbox)],
     [ss.record("bike.person_id", sg.Combo)],
     [ss.actions("_actbike_", "bike", default=True)],
@@ -181,22 +175,16 @@ bike_layout = [
 # bike_repair
 # -------------------------
 # Define the columns for the table selector
-bike_repair_headings = ["id    ", "Name             ", "example"]
-bike_repair_visible = [enable_id, 1, 1]
+if tables:
+    bike_repair_headings = ["id    ", "Name             ", "example"]
+    bike_repair_visible = [enable_id, 1, 1]
+    selector = [ss.selector('_selRepair_','bike_repair',sg.Table,num_rows=4,headings=bike_repair_headings,visible_column_map=bike_repair_visible,auto_size_columns=True)]
+else:
+    selector = [ss.selector("_selRepair_", "bike_repair", sg.Combo)]
 bike_repair_layout = [
     [sg.HorizontalSeparator()],
     [sg.Text("Bike child, Person Grandchild")],
-    [
-        ss.selector(
-            "_selbikerepair_",
-            "bike_repair",
-            sg.Table,
-            num_rows=4,
-            headings=bike_repair_headings,
-            visible_column_map=bike_repair_visible,
-            auto_size_columns=False,
-        )
-    ],
+    selector,
     [ss.record("bike_repair.name"), ss.record("bike_repair.example", sg.Checkbox)],
     [ss.record("bike_repair.bike_id", sg.Combo)],
     [ss.actions("_actrepair_", "bike_repair", default=True)],
@@ -205,22 +193,16 @@ bike_repair_layout = [
 # style
 # -------------------------
 # Define the columns for the table selector
-style_headings = ["id    ", "Name             ", "example"]
-style_visible = [enable_id, 1, 1]
+if tables:
+    style_headings = ["id    ", "Name             ", "example"]
+    style_visible = [enable_id, 1, 1]
+    selector = [ss.selector('_selStyle_','style',sg.Table,num_rows=4,headings=style_headings,visible_column_map=style_visible,auto_size_columns=True)]
+else:
+    selector = [ss.selector("_selStyle_", "style", sg.Combo)]
 style_layout = [
     [sg.HorizontalSeparator()],
     [sg.Text("BikeRepair Child, Person Grandgrandchild")],
-    [
-        ss.selector(
-            "_selstyle_",
-            "style",
-            sg.Table,
-            num_rows=4,
-            headings=style_headings,
-            visible_column_map=style_visible,
-            auto_size_columns=False,
-        )
-    ],
+    selector,
     [ss.record("style.name"), ss.record("style.example", sg.Checkbox)],
     [ss.record("style.bike_repair_id", sg.Combo)],
     [ss.actions("_actstyle_", "style", default=True)],
