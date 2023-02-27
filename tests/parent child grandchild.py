@@ -101,9 +101,11 @@ INSERT INTO "building" VALUES (3,'Cabin',0);
 
 # Define the columns for the table selector
 if tables:
+    columns=['id','name','example']
+    building_visible = [(1 if c != "id" else enable_id) for c in columns]
     building_headings = ["id    ", "Name             ", "example"]
     building_visible = [enable_id, 1, 1]
-    selector = [ss.selector('_selBuilding_','building',sg.Table,num_rows=4,headings=building_headings,visible_column_map=building_visible,auto_size_columns=True)]
+    selector = [ss.selector('_selBuilding_','building',sg.Table,num_rows=4,headings=building_headings,visible_column_map=building_visible,columns=columns,auto_size_columns=True)]
 else:
     selector = [ss.selector("_selBuilding_", "building", sg.Combo)]
 
@@ -118,9 +120,10 @@ building_layout = [
 # Person
 # -------------------------
 if tables:
+    columns=['id','name','example']
     person_headings = ["id    ", "Name             ", "example"]
-    person_visible = [enable_id, 1, 1]
-    selector = [ss.selector('_selPerson_','person',sg.Table,num_rows=4,headings=person_headings,visible_column_map=person_visible,auto_size_columns=True)]
+    person_visible = [(1 if c != "id" else enable_id) for c in columns]
+    selector = [ss.selector('_selPerson_','person',sg.Table,num_rows=4,headings=person_headings,visible_column_map=person_visible,columns=columns,auto_size_columns=True)]
 else:
     selector = [ss.selector("_selPerson_", "person", sg.Combo)]
 # Define the columns for the table selector
@@ -137,9 +140,10 @@ person_layout = [
 # -------------------------
 # Define the columns for the table selector
 if tables:
+    columns=['id','name','example']
     car_headings = ["id    ", "Name             ", "example"]
-    car_visible = [enable_id, 1, 1]
-    selector = [ss.selector('_selCar_','car',sg.Table,num_rows=4,headings=car_headings,visible_column_map=car_visible,auto_size_columns=True)]
+    car_visible = [(1 if c != "id" else enable_id) for c in columns]
+    selector = [ss.selector('_selCar_','car',sg.Table,num_rows=4,headings=car_headings,visible_column_map=car_visible,columns=columns,auto_size_columns=True)]
 else:
     selector = [ss.selector("_selCar_", "car", sg.Combo)]
 car_layout = [
@@ -156,9 +160,10 @@ car_layout = [
 # -------------------------
 # Define the columns for the table selector
 if tables:
+    columns=['id','name','example']
     bike_headings = ["id    ", "Name             ", "example"]
-    bike_visible = [enable_id, 1, 1]
-    selector = [ss.selector('_selBike_','bike',sg.Table,num_rows=4,headings=bike_headings,visible_column_map=bike_visible,auto_size_columns=True)]
+    bike_visible = [(1 if c != "id" else enable_id) for c in columns]
+    selector = [ss.selector('_selBike_','bike',sg.Table,num_rows=4,headings=bike_headings,visible_column_map=bike_visible,columns=columns,auto_size_columns=True)]
 else:
     selector = [ss.selector("_selBike_", "bike", sg.Combo)]
 bike_layout = [
@@ -173,9 +178,10 @@ bike_layout = [
 # -------------------------
 # Define the columns for the table selector
 if tables:
+    columns=['id','name','example']
     bike_repair_headings = ["id    ", "Name             ", "example"]
-    bike_repair_visible = [enable_id, 1, 1]
-    selector = [ss.selector('_selRepair_','bike_repair',sg.Table,num_rows=4,headings=bike_repair_headings,visible_column_map=bike_repair_visible,auto_size_columns=True)]
+    bike_repair_visible = [(1 if c != "id" else enable_id) for c in columns]
+    selector = [ss.selector('_selRepair_','bike_repair',sg.Table,num_rows=4,headings=bike_repair_headings,visible_column_map=bike_repair_visible,columns=columns,auto_size_columns=True)]
 else:
     selector = [ss.selector("_selRepair_", "bike_repair", sg.Combo)]
 bike_repair_layout = [
@@ -191,9 +197,10 @@ bike_repair_layout = [
 # -------------------------
 # Define the columns for the table selector
 if tables:
+    columns=['id','name','example']
     style_headings = ["id    ", "Name             ", "example"]
-    style_visible = [enable_id, 1, 1]
-    selector = [ss.selector('_selStyle_','style',sg.Table,num_rows=4,headings=style_headings,visible_column_map=style_visible,auto_size_columns=True)]
+    style_visible = [(1 if c != "id" else enable_id) for c in columns]
+    selector = [ss.selector('_selStyle_','style',sg.Table,num_rows=4,headings=style_headings,visible_column_map=style_visible,columns=columns,auto_size_columns=True)]
 else:
     selector = [ss.selector("_selStyle_", "style", sg.Combo)]
 style_layout = [
@@ -229,7 +236,36 @@ frm = ss.Form(driver, bind=window)  # <=== Here is the magic!
 frm.set_prompt_save(True)
 
 window.SetAlpha(1)
-print('start')
+
+class ColumnSort:
+    
+    def __init__(self,window,table_element,ekey):
+        self.window = window
+        self.widget = self.window[table_element].Widget
+        self.ekey = ekey
+  
+    def double_click(self,event):
+        """
+        Additional event for double-click on header
+        event: class event
+        """
+        region = self.widget.identify("region", event.x, event.y)
+        if region == 'heading':                                 # Only care double-clock on headings
+            cid = int(self.widget.identify_column(event.x)[1:])-1     # check which column clicked
+            self.window.write_event_value(self.ekey, cid)
+
+sq = dict()
+for q, t in frm.queries.items():
+    if len(t.selector):
+        for e in t.selector:
+            element = e["element"].key
+            event_key = f'{q}??{element}'
+            columns = e["element"].metadata["columns"]
+        sq[q] = {}
+        sq[q]['columns'] = columns
+        sq[q]['order'] = 'DESC'
+        sq[q]['widget'] = window[element].Widget
+        sq[q]['widget'].bind('<Double-Button-1>', ColumnSort(window=window,table_element=element,ekey=event_key).double_click, add='+')
 
 def test_set_by_pk(number):
     for i in range(number):
@@ -259,5 +295,16 @@ while True:
         et = time.time()
         elapsed_time = et - st
         print(elapsed_time)
+
+    elif "??" in event:
+        table, element = event.split('??')
+        column_index = values[event]
+        column_index -= 1 if column_index > 0 else 0 # ignore the virtual column
+        column_name = sq[table]['columns'][column_index]
+        pk = frm[table].get_current_pk()
+        frm[table].set_order_clause(f"ORDER by {column_name} {sq[table]['order']}")
+        sq[table]['order'] = 'DESC' if sq[table]['order'] == 'ASC' else 'ASC'
+        frm[table].requery(select_first=False) #keep spot in table
+        frm[table].set_by_pk(pk,dependents=False,skip_prompt_save=True)
     else:
         logger.info(f"This event ({event}) is not yet handled.")
