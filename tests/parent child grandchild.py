@@ -304,6 +304,7 @@ while True:
         pk = frm[table].get_current_pk()
         frm[table].set_order_clause(f"ORDER by {column_name} {sq[table]['order']}")
         sq[table]['order'] = 'DESC' if sq[table]['order'] == 'ASC' else 'ASC'
+        frm[table].prompt_save()
         frm[table].requery(select_first=False) #keep spot in table
         frm[table].set_by_pk(pk,dependents=False,skip_prompt_save=True)
     else:
