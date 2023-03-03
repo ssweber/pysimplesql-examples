@@ -103,9 +103,9 @@ INSERT INTO "building" VALUES (3,'Cabin',0);
 if tables:
     # Define the columns for the table selector using the TableHeading convenience class.  This will also allow sorting!
     headings=ss.TableHeadings(sort_enable=True)
-    headings.add('id', 'id', width=10)
-    headings.add('Name', 'name', width=10)
-    headings.add('Example', 'example',  width=20)
+    headings.add_column('id', 'id', width=10)
+    headings.add_column('Name', 'name', width=10)
+    headings.add_column('Example', 'example',  width=20)
     selector = [ss.selector('sel', 'building',sg.Table,num_rows=4,headings=headings,auto_size_columns=True)]
 else:
     selector = [ss.selector('sel', "building", sg.Combo)]
@@ -123,9 +123,9 @@ building_layout = [
 if tables:
     # Define the columns for the table selector using the TableHeading convenience class.  This will also allow sorting!
     headings=ss.TableHeadings(sort_enable=True)
-    headings.add('id', 'id', width=10)
-    headings.add('Name', 'name', width=10)
-    headings.add('Example', 'example',  width=20)
+    headings.add_column('id', 'id', width=10)
+    headings.add_column('Name', 'name', width=10)
+    headings.add_column('Example', 'example',  width=20)
     selector = [ss.selector('sel', 'person',sg.Table,num_rows=4,headings=headings,auto_size_columns=True)]
 else:
     selector = [ss.selector('sel', "person", sg.Combo)]
@@ -145,9 +145,9 @@ person_layout = [
 if tables:
     # Define the columns for the table selector using the TableHeading convenience class.  This will also allow sorting!
     headings=ss.TableHeadings(sort_enable=True)
-    headings.add('id', 'id', width=10)
-    headings.add('Name', 'name', width=10)
-    headings.add('Example', 'example',  width=20)
+    headings.add_column('id', 'id', width=10)
+    headings.add_column('Name', 'name', width=10)
+    headings.add_column('Example', 'example',  width=20)
     selector = [ss.selector('sel', 'car',sg.Table,num_rows=4,headings=headings,auto_size_columns=True)]
 else:
     selector = [ss.selector('sel', "car", sg.Combo)]
@@ -167,9 +167,9 @@ car_layout = [
 if tables:
     # Define the columns for the table selector using the TableHeading convenience class.  This will also allow sorting!
     headings=ss.TableHeadings(sort_enable=True)
-    headings.add('id', 'id', width=10)
-    headings.add('Name', 'name', width=10)
-    headings.add('Example', 'example',  width=20)
+    headings.add_column('id', 'id', width=10)
+    headings.add_column('Name', 'name', width=10)
+    headings.add_column('Example', 'example',  width=20)
     selector = [ss.selector('sel', 'bike',sg.Table,num_rows=4,headings=headings,auto_size_columns=True)]
 else:
     selector = [ss.selector('sel', "bike", sg.Combo)]
@@ -187,9 +187,9 @@ bike_layout = [
 if tables:
     # Define the columns for the table selector using the TableHeading convenience class.  This will also allow sorting!
     headings=ss.TableHeadings(sort_enable=True)
-    headings.add('id', 'id', width=10)
-    headings.add('Name', 'name', width=10)
-    headings.add('Example', 'example',  width=20)
+    headings.add_column('id', 'id', width=10)
+    headings.add_column('Name', 'name', width=10)
+    headings.add_column('Example', 'example',  width=20)
     selector = [ss.selector('sel', 'bike_repair',sg.Table,num_rows=4,headings=headings,auto_size_columns=True)]
 else:
     selector = [ss.selector('sel', "bike_repair", sg.Combo)]
@@ -208,9 +208,9 @@ bike_repair_layout = [
 if tables:
     # Define the columns for the table selector using the TableHeading convenience class.  This will also allow sorting!
     headings=ss.TableHeadings(sort_enable=True)
-    headings.add('id', 'id', width=10)
-    headings.add('Name', 'name', width=10)
-    headings.add('Example', 'example',  width=20)
+    headings.add_column('id', 'id', width=10)
+    headings.add_column('Name', 'name', width=10)
+    headings.add_column('Example', 'example',  width=20)
     selector = [ss.selector('sel', 'style',sg.Table,num_rows=4,headings=headings,auto_size_columns=True)]
 else:
     selector = [ss.selector('sel', "style", sg.Combo)]
