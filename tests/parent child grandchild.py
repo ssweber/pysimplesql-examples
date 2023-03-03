@@ -248,36 +248,6 @@ frm.set_prompt_save(True)
 
 window.SetAlpha(1)
 
-class ColumnSort:
-    
-    def __init__(self,window,table_element,ekey):
-        self.window = window
-        self.widget = self.window[table_element].Widget
-        self.ekey = ekey
-  
-    def double_click(self,event):
-        """
-        Additional event for double-click on header
-        event: class event
-        """
-        region = self.widget.identify("region", event.x, event.y)
-        if region == 'heading':                                 # Only care double-clock on headings
-            cid = int(self.widget.identify_column(event.x)[1:])-1     # check which column clicked
-            self.window.write_event_value(self.ekey, cid)
-
-sq = dict()
-for q, t in frm.queries.items():
-    if len(t.selector):
-        for e in t.selector:
-            element = e["element"].key
-            event_key = f'{q}??{element}'
-            columns = e["element"].metadata["columns"]
-        sq[q] = {}
-        sq[q]['columns'] = columns
-        sq[q]['order'] = 'DESC'
-        sq[q]['widget'] = window[element].Widget
-        sq[q]['widget'].bind('<Double-Button-1>', ColumnSort(window=window,table_element=element,ekey=event_key).double_click, add='+')
-
 def test_set_by_pk(number):
     for i in range(number):
         frm['person'].set_by_pk(2)
@@ -306,17 +276,5 @@ while True:
         et = time.time()
         elapsed_time = et - st
         print(elapsed_time)
-
-    elif "??" in event:
-        table, element = event.split('??')
-        column_index = values[event]
-        column_index -= 1 if column_index > 0 else 0 # ignore the virtual column
-        column_name = sq[table]['columns'][column_index]
-        pk = frm[table].get_current_pk()
-        frm[table].set_order_clause(f"ORDER by {column_name} {sq[table]['order']}")
-        sq[table]['order'] = 'DESC' if sq[table]['order'] == 'ASC' else 'ASC'
-        frm[table].prompt_save()
-        frm[table].requery(select_first=False) #keep spot in table
-        frm[table].set_by_pk(pk,dependents=False,skip_prompt_save=True)
     else:
         logger.info(f"This event ({event}) is not yet handled.")
