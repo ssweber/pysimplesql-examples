@@ -114,7 +114,7 @@ building_layout = [
     [sg.Text("Buildings - Childless Parent")],
     selector,
     [ss.record("building.name"), ss.record("building.example", sg.Checkbox)],
-    [ss.actions("_actBuilding_", "building", default=True)],
+    [ss.actions("act", "building", default=True)],
     [sg.HorizontalSeparator()],
 ]
 
@@ -134,7 +134,7 @@ person_layout = [
     [sg.Text("Person - Parent w/ cascade")],
     selector,
     [ss.record("person.name"), ss.record("person.example", sg.Checkbox)],
-    [ss.actions("_actPerson_", "person", default=True)],
+    [ss.actions("act", "person", default=True)],
     [sg.HorizontalSeparator()],
 ]
 
@@ -158,7 +158,7 @@ car_layout = [
     [
         ss.record("car.person_id", sg.Combo),
     ],
-    [ss.actions("_actcar_", "car", default=True)],
+    [ss.actions("act", "car", default=True)],
 ]
 
 # bike
@@ -178,7 +178,7 @@ bike_layout = [
     selector,
     [ss.record("bike.name"), ss.record("bike.example", sg.Checkbox)],
     [ss.record("bike.person_id", sg.Combo)],
-    [ss.actions("_actbike_", "bike", default=True)],
+    [ss.actions("act", "bike", default=True)],
 ]
 
 # bike_repair
@@ -199,7 +199,7 @@ bike_repair_layout = [
     selector,
     [ss.record("bike_repair.name"), ss.record("bike_repair.example", sg.Checkbox)],
     [ss.record("bike_repair.bike_id", sg.Combo)],
-    [ss.actions("_actrepair_", "bike_repair", default=True)],
+    [ss.actions("act", "bike_repair", default=True)],
 ]
 
 # style
@@ -220,7 +220,7 @@ style_layout = [
     selector,
     [ss.record("style.name"), ss.record("style.example", sg.Checkbox)],
     [ss.record("style.bike_repair_id", sg.Combo)],
-    [ss.actions("_actstyle_", "style", default=True)],
+    [ss.actions("act", "style", default=True)],
 ]
 
 # -------------------------
