@@ -16,7 +16,7 @@ _tabs_ = "-TABGROUP-"
 
 logger = logging.getLogger(__name__)
 logging.basicConfig(
-    level=logging.DEBUG
+    level=logging.INFO
 )  # <=== You can set the logging level here (NOTSET,DEBUG,INFO,WARNING,ERROR,CRITICAL)
 
 sql_grandchild = """
@@ -108,15 +108,15 @@ if tables:
     headings.add_column('id', 'id', width=10)
     headings.add_column('name', 'Name', width=10)
     headings.add_column('example', 'Example', width=20)
-    selector = [ss.selector('building', 'sel', sg.Table,num_rows=4,headings=headings,auto_size_columns=True)]
+    selector = [ss.selector('building',  sg.Table,num_rows=4,headings=headings,auto_size_columns=True)]
 else:
-    selector = [ss.selector("building", 'sel', sg.Combo)]
+    selector = [ss.selector("building",  sg.Combo)]
 
 building_layout = [
     [sg.Text("Buildings - Childless Parent, default int 1")],
     selector,
     [ss.record("building.name"), ss.record("building.example", sg.Checkbox, default = False)],
-    [ss.actions("building", 'act', default=True)],
+    [ss.actions("building",  default=True)],
     [sg.HorizontalSeparator()],
 ]
 
@@ -128,15 +128,15 @@ if tables:
     headings.add_column('id', 'id', width=10)
     headings.add_column('name', 'Name', width=10)
     headings.add_column('example', 'Example', width=20)
-    selector = [ss.selector('person', 'sel', sg.Table,num_rows=4,headings=headings,auto_size_columns=True)]
+    selector = [ss.selector('person',  sg.Table,num_rows=4,headings=headings,auto_size_columns=True)]
 else:
-    selector = [ss.selector("person", 'sel', sg.Combo)]
+    selector = [ss.selector("person",  sg.Combo)]
 # Define the columns for the table selector
 person_layout = [
     [sg.Text("Person - Parent w/ cascade, default int 0")],
     selector,
-    [ss.record("person.name"), ss.record("person.example", sg.Checkbox)],
-    [ss.actions("person", 'act', default=True)],
+    [ss.record("person.name"), ss.record("person.example", sg.Checkbox, default=True)],
+    [ss.actions("person",  default=True)],
     [sg.HorizontalSeparator()],
 ]
 
@@ -150,9 +150,9 @@ if tables:
     headings.add_column('id', 'id', width=10)
     headings.add_column('name', 'Name', width=10)
     headings.add_column('example', 'Example', width=20)
-    selector = [ss.selector('car', 'sel', sg.Table,num_rows=4,headings=headings,auto_size_columns=True)]
+    selector = [ss.selector('car',  sg.Table,num_rows=4,headings=headings,auto_size_columns=True)]
 else:
-    selector = [ss.selector("car", 'sel', sg.Combo)]
+    selector = [ss.selector("car",  sg.Combo)]
 car_layout = [
     [sg.Text("Car - Child of Person/ Sibling of Bike, default str False")],
     selector,
@@ -160,7 +160,7 @@ car_layout = [
     [
         ss.record("car.person_id", sg.Combo),
     ],
-    [ss.actions("car", 'act', default=True)],
+    [ss.actions("car",  default=True)],
 ]
 
 # bike
@@ -172,15 +172,15 @@ if tables:
     headings.add_column('id', 'id', width=10)
     headings.add_column('name', 'Name', width=10)
     headings.add_column('example', 'Example', width=20)
-    selector = [ss.selector('bike', 'sel', sg.Table,num_rows=4,headings=headings,auto_size_columns=True)]
+    selector = [ss.selector('bike',  sg.Table,num_rows=4,headings=headings,auto_size_columns=True)]
 else:
-    selector = [ss.selector("bike", 'sel', sg.Combo)]
+    selector = [ss.selector("bike",  sg.Combo)]
 bike_layout = [
     [sg.Text("Bike - Child of Person/ Sibling of Car, default bool False")],
     selector,
     [ss.record("bike.name"), ss.record("bike.example", sg.Checkbox)],
     [ss.record("bike.person_id", sg.Combo)],
-    [ss.actions("bike", 'act', default=True)],
+    [ss.actions("bike",  default=True)],
 ]
 
 # bike_repair
@@ -192,16 +192,16 @@ if tables:
     headings.add_column('id', 'id', width=10)
     headings.add_column('name', 'Name', width=10)
     headings.add_column('example', 'Example', width=20)
-    selector = [ss.selector('bike_repair', 'sel', sg.Table,num_rows=4,headings=headings,auto_size_columns=True)]
+    selector = [ss.selector('bike_repair',  sg.Table,num_rows=4,headings=headings,auto_size_columns=True)]
 else:
-    selector = [ss.selector("bike_repair", 'sel', sg.Combo)]
+    selector = [ss.selector("bike_repair",  sg.Combo)]
 bike_repair_layout = [
     [sg.HorizontalSeparator()],
     [sg.Text("Bike Repair - Bike child, Person Grandchild, default str True")],
     selector,
     [ss.record("bike_repair.name"), ss.record("bike_repair.example", sg.Checkbox)],
     [ss.record("bike_repair.bike_id", sg.Combo)],
-    [ss.actions("bike_repair", 'act', default=True)],
+    [ss.actions("bike_repair",  default=True)],
 ]
 
 # style
@@ -213,16 +213,16 @@ if tables:
     headings.add_column('id', 'id', width=10)
     headings.add_column('name', 'Name', width=10)
     headings.add_column('example', 'Example', width=20)
-    selector = [ss.selector('style', 'sel', sg.Table,num_rows=4,headings=headings,auto_size_columns=True)]
+    selector = [ss.selector('style',  sg.Table,num_rows=4,headings=headings,auto_size_columns=True)]
 else:
-    selector = [ss.selector("style", 'sel', sg.Combo)]
+    selector = [ss.selector("style",  sg.Combo)]
 style_layout = [
     [sg.HorizontalSeparator()],
     [sg.Text("Repair Style - Child of BikeRepair / Grandgrandchild of Person, default bool True")],
     selector,
     [ss.record("style.name"), ss.record("style.example", sg.Checkbox)],
     [ss.record("style.bike_repair_id", sg.Combo)],
-    [ss.actions("style", 'act', default=True)],
+    [ss.actions("style",  default=True)],
 ]
 
 # -------------------------
