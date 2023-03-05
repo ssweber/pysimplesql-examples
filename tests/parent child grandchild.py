@@ -106,17 +106,17 @@ if tables:
     # Define the columns for the table selector using the TableHeading convenience class.  This will also allow sorting!
     headings=ss.TableHeadings(sort_enable=True)
     headings.add_column('id', 'id', width=10)
-    headings.add_column('Name', 'name', width=10)
-    headings.add_column('Example', 'example',  width=20)
-    selector = [ss.selector('sel', 'building',sg.Table,num_rows=4,headings=headings,auto_size_columns=True)]
+    headings.add_column('name', 'Name', width=10)
+    headings.add_column('example', 'Example', width=20)
+    selector = [ss.selector('building', 'sel', sg.Table,num_rows=4,headings=headings,auto_size_columns=True)]
 else:
-    selector = [ss.selector('sel', "building", sg.Combo)]
+    selector = [ss.selector("building", 'sel', sg.Combo)]
 
 building_layout = [
     [sg.Text("Buildings - Childless Parent, default int 1")],
     selector,
     [ss.record("building.name"), ss.record("building.example", sg.Checkbox, default = False)],
-    [ss.actions("act", "building", default=True)],
+    [ss.actions("building", 'act', default=True)],
     [sg.HorizontalSeparator()],
 ]
 
@@ -126,17 +126,17 @@ if tables:
     # Define the columns for the table selector using the TableHeading convenience class.  This will also allow sorting!
     headings=ss.TableHeadings(sort_enable=True)
     headings.add_column('id', 'id', width=10)
-    headings.add_column('Name', 'name', width=10)
-    headings.add_column('Example', 'example',  width=20)
-    selector = [ss.selector('sel', 'person',sg.Table,num_rows=4,headings=headings,auto_size_columns=True)]
+    headings.add_column('name', 'Name', width=10)
+    headings.add_column('example', 'Example', width=20)
+    selector = [ss.selector('person', 'sel', sg.Table,num_rows=4,headings=headings,auto_size_columns=True)]
 else:
-    selector = [ss.selector('sel', "person", sg.Combo)]
+    selector = [ss.selector("person", 'sel', sg.Combo)]
 # Define the columns for the table selector
 person_layout = [
     [sg.Text("Person - Parent w/ cascade, default int 0")],
     selector,
     [ss.record("person.name"), ss.record("person.example", sg.Checkbox)],
-    [ss.actions("act", "person", default=True)],
+    [ss.actions("person", 'act', default=True)],
     [sg.HorizontalSeparator()],
 ]
 
@@ -148,11 +148,11 @@ if tables:
     # Define the columns for the table selector using the TableHeading convenience class.  This will also allow sorting!
     headings=ss.TableHeadings(sort_enable=True)
     headings.add_column('id', 'id', width=10)
-    headings.add_column('Name', 'name', width=10)
-    headings.add_column('Example', 'example',  width=20)
-    selector = [ss.selector('sel', 'car',sg.Table,num_rows=4,headings=headings,auto_size_columns=True)]
+    headings.add_column('name', 'Name', width=10)
+    headings.add_column('example', 'Example', width=20)
+    selector = [ss.selector('car', 'sel', sg.Table,num_rows=4,headings=headings,auto_size_columns=True)]
 else:
-    selector = [ss.selector('sel', "car", sg.Combo)]
+    selector = [ss.selector("car", 'sel', sg.Combo)]
 car_layout = [
     [sg.Text("Car - Child of Person/ Sibling of Bike, default str False")],
     selector,
@@ -160,7 +160,7 @@ car_layout = [
     [
         ss.record("car.person_id", sg.Combo),
     ],
-    [ss.actions("act", "car", default=True)],
+    [ss.actions("car", 'act', default=True)],
 ]
 
 # bike
@@ -170,17 +170,17 @@ if tables:
     # Define the columns for the table selector using the TableHeading convenience class.  This will also allow sorting!
     headings=ss.TableHeadings(sort_enable=True)
     headings.add_column('id', 'id', width=10)
-    headings.add_column('Name', 'name', width=10)
-    headings.add_column('Example', 'example',  width=20)
-    selector = [ss.selector('sel', 'bike',sg.Table,num_rows=4,headings=headings,auto_size_columns=True)]
+    headings.add_column('name', 'Name', width=10)
+    headings.add_column('example', 'Example', width=20)
+    selector = [ss.selector('bike', 'sel', sg.Table,num_rows=4,headings=headings,auto_size_columns=True)]
 else:
-    selector = [ss.selector('sel', "bike", sg.Combo)]
+    selector = [ss.selector("bike", 'sel', sg.Combo)]
 bike_layout = [
     [sg.Text("Bike - Child of Person/ Sibling of Car, default bool False")],
     selector,
     [ss.record("bike.name"), ss.record("bike.example", sg.Checkbox)],
     [ss.record("bike.person_id", sg.Combo)],
-    [ss.actions("act", "bike", default=True)],
+    [ss.actions("bike", 'act', default=True)],
 ]
 
 # bike_repair
@@ -190,18 +190,18 @@ if tables:
     # Define the columns for the table selector using the TableHeading convenience class.  This will also allow sorting!
     headings=ss.TableHeadings(sort_enable=True)
     headings.add_column('id', 'id', width=10)
-    headings.add_column('Name', 'name', width=10)
-    headings.add_column('Example', 'example',  width=20)
-    selector = [ss.selector('sel', 'bike_repair',sg.Table,num_rows=4,headings=headings,auto_size_columns=True)]
+    headings.add_column('name', 'Name', width=10)
+    headings.add_column('example', 'Example', width=20)
+    selector = [ss.selector('bike_repair', 'sel', sg.Table,num_rows=4,headings=headings,auto_size_columns=True)]
 else:
-    selector = [ss.selector('sel', "bike_repair", sg.Combo)]
+    selector = [ss.selector("bike_repair", 'sel', sg.Combo)]
 bike_repair_layout = [
     [sg.HorizontalSeparator()],
     [sg.Text("Bike Repair - Bike child, Person Grandchild, default str True")],
     selector,
     [ss.record("bike_repair.name"), ss.record("bike_repair.example", sg.Checkbox)],
     [ss.record("bike_repair.bike_id", sg.Combo)],
-    [ss.actions("act", "bike_repair", default=True)],
+    [ss.actions("bike_repair", 'act', default=True)],
 ]
 
 # style
@@ -211,18 +211,18 @@ if tables:
     # Define the columns for the table selector using the TableHeading convenience class.  This will also allow sorting!
     headings=ss.TableHeadings(sort_enable=True)
     headings.add_column('id', 'id', width=10)
-    headings.add_column('Name', 'name', width=10)
-    headings.add_column('Example', 'example',  width=20)
-    selector = [ss.selector('sel', 'style',sg.Table,num_rows=4,headings=headings,auto_size_columns=True)]
+    headings.add_column('name', 'Name', width=10)
+    headings.add_column('example', 'Example', width=20)
+    selector = [ss.selector('style', 'sel', sg.Table,num_rows=4,headings=headings,auto_size_columns=True)]
 else:
-    selector = [ss.selector('sel', "style", sg.Combo)]
+    selector = [ss.selector("style", 'sel', sg.Combo)]
 style_layout = [
     [sg.HorizontalSeparator()],
     [sg.Text("Repair Style - Child of BikeRepair / Grandgrandchild of Person, default bool True")],
     selector,
     [ss.record("style.name"), ss.record("style.example", sg.Checkbox)],
     [ss.record("style.bike_repair_id", sg.Combo)],
-    [ss.actions("act", "style", default=True)],
+    [ss.actions("style", 'act', default=True)],
 ]
 
 # -------------------------
