@@ -16,14 +16,14 @@ _tabs_ = "-TABGROUP-"
 
 logger = logging.getLogger(__name__)
 logging.basicConfig(
-    level=logging.INFO
+    level=logging.DEBUG
 )  # <=== You can set the logging level here (NOTSET,DEBUG,INFO,WARNING,ERROR,CRITICAL)
 
 sql_grandchild = """
 CREATE TABLE IF NOT EXISTS "bike_repair" (
 	"id"	INTEGER NOT NULL,
 	"name"	TEXT NOT NULL DEFAULT 'Bike Repair Placeholder',
-	"example"	INTEGER NOT NULL DEFAULT 0,
+	"example"	TEXT NOT NULL DEFAULT 'True',
 	"bike_id"	INTEGER NOT NULL,
 	FOREIGN KEY("bike_id") REFERENCES "bike"("id") ON UPDATE CASCADE,
 	PRIMARY KEY("id" AUTOINCREMENT)
@@ -31,16 +31,18 @@ CREATE TABLE IF NOT EXISTS "bike_repair" (
 CREATE TABLE IF NOT EXISTS "style" (
 	"id"	INTEGER NOT NULL,
 	"name"	TEXT NOT NULL DEFAULT 'Bike Repair Placeholder',
-	"example"	INTEGER NOT NULL DEFAULT 0,
+	"example"	TEXT NOT NULL DEFAULT True,
 	"bike_repair_id"	INTEGER NOT NULL,
 	FOREIGN KEY("bike_repair_id") REFERENCES "bike_repair"("id") ON UPDATE CASCADE,
 	PRIMARY KEY("id" AUTOINCREMENT)
 );"""
 sql_grandchild_insert = """
-INSERT INTO "bike_repair" VALUES (1,'Wheel Repair',1,1);
-INSERT INTO "bike_repair" VALUES (2,'Seat Repair',1,1);
-INSERT INTO "style" VALUES (1,'Basic',1,1);
-INSERT INTO "style" VALUES (2,'Premium',1,1);
+INSERT INTO "bike_repair" VALUES (1,'Wheel Repair','True',1);
+INSERT INTO "bike_repair" VALUES (2,'Seat Repair','TRUE',1);
+INSERT INTO "bike_repair" VALUES (3,'Seat Repair','true',1);
+INSERT INTO "style" VALUES (1,'Basic',True,1);
+INSERT INTO "style" VALUES (2,'Premium',TRUE,1);
+INSERT INTO "style" VALUES (3,'Gold',true,1);
 """
 
 if not grandchild:
@@ -51,7 +53,7 @@ sql = f"""
 CREATE TABLE IF NOT EXISTS "car" (
 	"id"	INTEGER NOT NULL,
 	"name"	TEXT NOT NULL DEFAULT 'Car Placeholder',
-	"example"	INTEGER NOT NULL DEFAULT 0,
+	"example"	TEXT NOT NULL DEFAULT 'False',
 	"person_id"	INTEGER NOT NULL,
 	FOREIGN KEY("person_id") REFERENCES "person"("id") ON UPDATE CASCADE,
 	PRIMARY KEY("id" AUTOINCREMENT)
@@ -59,7 +61,7 @@ CREATE TABLE IF NOT EXISTS "car" (
 CREATE TABLE IF NOT EXISTS "bike" (
 	"id"	INTEGER NOT NULL,
 	"name"	TEXT NOT NULL DEFAULT 'Bike Placeholder',
-	"example"	INTEGER NOT NULL DEFAULT 0,
+	"example"	TEXT NOT NULL DEFAULT False,
 	"person_id"	INTEGER NOT NULL,
 	FOREIGN KEY("person_id") REFERENCES "person"("id") ON UPDATE CASCADE,
 	PRIMARY KEY("id" AUTOINCREMENT)
@@ -73,22 +75,22 @@ CREATE TABLE IF NOT EXISTS "person" (
 CREATE TABLE IF NOT EXISTS "building" (
 	"id"	INTEGER NOT NULL,
 	"name"	TEXT DEFAULT 'Building Placeholder',
-	"example"	INTEGER NOT NULL DEFAULT 0,
+	"example"	INTEGER NOT NULL DEFAULT 1,
 	PRIMARY KEY("id" AUTOINCREMENT)
 );
 {sql_grandchild}
-INSERT INTO "car" VALUES (1,'Landrover',1,1);
-INSERT INTO "car" VALUES (2,'Jeep',1,2);
-INSERT INTO "car" VALUES (3,'GTO',1,3);
-INSERT INTO "bike" VALUES (1,'Unicycle',1,1);
-INSERT INTO "bike" VALUES (2,'Street Bike',1,2);
-INSERT INTO "bike" VALUES (3,'Moped',1,3);
+INSERT INTO "car" VALUES (1,'Landrover','False',1);
+INSERT INTO "car" VALUES (2,'Jeep','FALSE',2);
+INSERT INTO "car" VALUES (3,'GTO','false',3);
+INSERT INTO "bike" VALUES (1,'Unicycle',False,1);
+INSERT INTO "bike" VALUES (2,'Street Bike',false,2);
+INSERT INTO "bike" VALUES (3,'Moped',FALSE,3);
 INSERT INTO "person" VALUES (1,'Bill',0);
 INSERT INTO "person" VALUES (2,'Jessica',0);
 INSERT INTO "person" VALUES (3,'Drake',0);
-INSERT INTO "building" VALUES (1,'Tower',0);
-INSERT INTO "building" VALUES (2,'Mall',0);
-INSERT INTO "building" VALUES (3,'Cabin',0);
+INSERT INTO "building" VALUES (1,'Tower',1);
+INSERT INTO "building" VALUES (2,'Mall',1);
+INSERT INTO "building" VALUES (3,'Cabin',1);
 {sql_grandchild_insert}
 """
 
@@ -111,9 +113,9 @@ else:
     selector = [ss.selector('sel', "building", sg.Combo)]
 
 building_layout = [
-    [sg.Text("Buildings - Childless Parent")],
+    [sg.Text("Buildings - Childless Parent, default int 1")],
     selector,
-    [ss.record("building.name"), ss.record("building.example", sg.Checkbox)],
+    [ss.record("building.name"), ss.record("building.example", sg.Checkbox, default = False)],
     [ss.actions("act", "building", default=True)],
     [sg.HorizontalSeparator()],
 ]
@@ -131,7 +133,7 @@ else:
     selector = [ss.selector('sel', "person", sg.Combo)]
 # Define the columns for the table selector
 person_layout = [
-    [sg.Text("Person - Parent w/ cascade")],
+    [sg.Text("Person - Parent w/ cascade, default int 0")],
     selector,
     [ss.record("person.name"), ss.record("person.example", sg.Checkbox)],
     [ss.actions("act", "person", default=True)],
@@ -152,7 +154,7 @@ if tables:
 else:
     selector = [ss.selector('sel', "car", sg.Combo)]
 car_layout = [
-    [sg.Text("Car - Child of Person/ Sibling of Bike")],
+    [sg.Text("Car - Child of Person/ Sibling of Bike, default str False")],
     selector,
     [ss.record("car.name"), ss.record("car.example", sg.Checkbox)],
     [
@@ -174,7 +176,7 @@ if tables:
 else:
     selector = [ss.selector('sel', "bike", sg.Combo)]
 bike_layout = [
-    [sg.Text("Bike - Child of Person/ Sibling of Car")],
+    [sg.Text("Bike - Child of Person/ Sibling of Car, default bool False")],
     selector,
     [ss.record("bike.name"), ss.record("bike.example", sg.Checkbox)],
     [ss.record("bike.person_id", sg.Combo)],
@@ -195,7 +197,7 @@ else:
     selector = [ss.selector('sel', "bike_repair", sg.Combo)]
 bike_repair_layout = [
     [sg.HorizontalSeparator()],
-    [sg.Text("Bike Repair - Bike child, Person Grandchild")],
+    [sg.Text("Bike Repair - Bike child, Person Grandchild, default str True")],
     selector,
     [ss.record("bike_repair.name"), ss.record("bike_repair.example", sg.Checkbox)],
     [ss.record("bike_repair.bike_id", sg.Combo)],
@@ -216,7 +218,7 @@ else:
     selector = [ss.selector('sel', "style", sg.Combo)]
 style_layout = [
     [sg.HorizontalSeparator()],
-    [sg.Text("Repair Upgrade - Child of BikeRepair / Grandgrandchild of Person")],
+    [sg.Text("Repair Style - Child of BikeRepair / Grandgrandchild of Person, default bool True")],
     selector,
     [ss.record("style.name"), ss.record("style.example", sg.Checkbox)],
     [ss.record("style.bike_repair_id", sg.Combo)],
@@ -252,6 +254,18 @@ def test_set_by_pk(number):
     for i in range(number):
         frm['person'].set_by_pk(2)
         frm['person'].set_by_pk(1)
+
+transform_dict = {'example' : {
+    'decode' : lambda row,col: bool(row[col]),
+    'encode' : lambda row,col: bool(row[col]),
+    }}
+
+# for q in frm.queries:
+#     frm[q].set_transform(ss.simple_transform)
+#     frm[q].add_simple_transform(transform_dict)
+#     
+# frm.requery_all()
+# frm.update_elements()
     
 # ---------
 # MAIN LOOP
