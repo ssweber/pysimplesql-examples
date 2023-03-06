@@ -75,7 +75,9 @@ CREATE TABLE IF NOT EXISTS "person" (
 CREATE TABLE IF NOT EXISTS "building" (
 	"id"	INTEGER NOT NULL,
 	"name"	TEXT DEFAULT 'Building Placeholder',
+	"person_id"	INTEGER NOT NULL,
 	"example"	INTEGER NOT NULL DEFAULT 1,
+	FOREIGN KEY("person_id") REFERENCES "person"("id"),
 	PRIMARY KEY("id" AUTOINCREMENT)
 );
 {sql_grandchild}
@@ -88,9 +90,9 @@ INSERT INTO "bike" VALUES (3,'Moped',FALSE,3);
 INSERT INTO "person" VALUES (1,'Bill',0);
 INSERT INTO "person" VALUES (2,'Jessica',0);
 INSERT INTO "person" VALUES (3,'Drake',0);
-INSERT INTO "building" VALUES (1,'Tower',1);
-INSERT INTO "building" VALUES (2,'Mall',1);
-INSERT INTO "building" VALUES (3,'Cabin',1);
+INSERT INTO "building" VALUES (1,'Tower',1,1);
+INSERT INTO "building" VALUES (2,'Mall',1,1);
+INSERT INTO "building" VALUES (3,'Cabin',1,1);
 {sql_grandchild_insert}
 """
 
@@ -107,6 +109,7 @@ if tables:
     headings=ss.TableHeadings(sort_enable=True)
     headings.add_column('id', 'id', width=10)
     headings.add_column('name', 'Name', width=10)
+    headings.add_column('person_id', 'Owner', width=20)
     headings.add_column('example', 'Example', width=20)
     selector = [ss.selector('building',  sg.Table,num_rows=4,headings=headings,auto_size_columns=True)]
 else:
@@ -115,7 +118,8 @@ else:
 building_layout = [
     [sg.Text("Buildings - Childless Parent, default int 1")],
     selector,
-    [ss.record("building.name"), ss.record("building.example", sg.Checkbox, default = False)],
+    [ss.field("building.person_id", sg.Combo)],
+    [ss.field("building.name"), ss.field("building.example", sg.Checkbox, default = False)],
     [ss.actions("building",  default=True)],
     [sg.HorizontalSeparator()],
 ]
@@ -135,7 +139,7 @@ else:
 person_layout = [
     [sg.Text("Person - Parent w/ cascade, default int 0")],
     selector,
-    [ss.record("person.name"), ss.record("person.example", sg.Checkbox, default=True)],
+    [ss.field("person.name"), ss.field("person.example", sg.Checkbox, default=True)],
     [ss.actions("person",  default=True)],
     [sg.HorizontalSeparator()],
 ]
@@ -156,10 +160,8 @@ else:
 car_layout = [
     [sg.Text("Car - Child of Person/ Sibling of Bike, default str False")],
     selector,
-    [ss.record("car.name"), ss.record("car.example", sg.Checkbox)],
-    [
-        ss.record("car.person_id", sg.Combo),
-    ],
+    [ss.field("car.name"), ss.field("car.example", sg.Checkbox)],
+    [ss.field("car.person_id", sg.Combo),],
     [ss.actions("car",  default=True)],
 ]
 
@@ -178,8 +180,8 @@ else:
 bike_layout = [
     [sg.Text("Bike - Child of Person/ Sibling of Car, default bool False")],
     selector,
-    [ss.record("bike.name"), ss.record("bike.example", sg.Checkbox)],
-    [ss.record("bike.person_id", sg.Combo)],
+    [ss.field("bike.name"), ss.field("bike.example", sg.Checkbox)],
+    [ss.field("bike.person_id", sg.Combo)],
     [ss.actions("bike",  default=True)],
 ]
 
@@ -199,8 +201,8 @@ bike_repair_layout = [
     [sg.HorizontalSeparator()],
     [sg.Text("Bike Repair - Bike child, Person Grandchild, default str True")],
     selector,
-    [ss.record("bike_repair.name"), ss.record("bike_repair.example", sg.Checkbox)],
-    [ss.record("bike_repair.bike_id", sg.Combo)],
+    [ss.field("bike_repair.name"), ss.field("bike_repair.example", sg.Checkbox)],
+    [ss.field("bike_repair.bike_id", sg.Combo)],
     [ss.actions("bike_repair",  default=True)],
 ]
 
@@ -220,8 +222,8 @@ style_layout = [
     [sg.HorizontalSeparator()],
     [sg.Text("Repair Style - Child of BikeRepair / Grandgrandchild of Person, default bool True")],
     selector,
-    [ss.record("style.name"), ss.record("style.example", sg.Checkbox)],
-    [ss.record("style.bike_repair_id", sg.Combo)],
+    [ss.field("style.name"), ss.field("style.example", sg.Checkbox)],
+    [ss.field("style.bike_repair_id", sg.Combo)],
     [ss.actions("style",  default=True)],
 ]
 
@@ -244,7 +246,7 @@ window = sg.Window(
 )
 
 driver = ss.Sqlite(":memory:", sql_commands=sql)  # Create a new database connection
-frm = ss.Form(driver, bind=window)  # <=== Here is the magic!
+frm = ss.Form(driver, bind_window=window)  # <=== Here is the magic!
 
 frm.set_prompt_save(True)
 
