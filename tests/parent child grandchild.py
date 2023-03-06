@@ -28,7 +28,7 @@ CREATE TABLE IF NOT EXISTS "bike_repair" (
 	FOREIGN KEY("bike_id") REFERENCES "bike"("id") ON UPDATE CASCADE,
 	PRIMARY KEY("id" AUTOINCREMENT)
 );
-CREATE TABLE IF NOT EXISTS "style" (
+CREATE TABLE IF NOT EXISTS "service" (
 	"id"	INTEGER NOT NULL,
 	"name"	TEXT NOT NULL DEFAULT 'Bike Repair Placeholder',
 	"example"	TEXT NOT NULL DEFAULT True,
@@ -40,9 +40,9 @@ sql_grandchild_insert = """
 INSERT INTO "bike_repair" VALUES (1,'Wheel Repair','True',1);
 INSERT INTO "bike_repair" VALUES (2,'Seat Repair','TRUE',1);
 INSERT INTO "bike_repair" VALUES (3,'Seat Repair','true',1);
-INSERT INTO "style" VALUES (1,'Basic',True,1);
-INSERT INTO "style" VALUES (2,'Premium',TRUE,1);
-INSERT INTO "style" VALUES (3,'Gold',true,1);
+INSERT INTO "service" VALUES (1,'Basic',True,1);
+INSERT INTO "service" VALUES (2,'Premium',TRUE,1);
+INSERT INTO "service" VALUES (3,'Gold',true,1);
 """
 
 if not grandchild:
@@ -206,7 +206,7 @@ bike_repair_layout = [
     [ss.actions("bike_repair",  default=True)],
 ]
 
-# style
+# service
 # -------------------------
 # Define the columns for the table selector
 if tables:
@@ -215,16 +215,16 @@ if tables:
     headings.add_column('id', 'id', width=10)
     headings.add_column('name', 'Name', width=10)
     headings.add_column('example', 'Example', width=20)
-    selector = [ss.selector('style',  sg.Table,num_rows=4,headings=headings,auto_size_columns=True)]
+    selector = [ss.selector('service',  sg.Table,num_rows=4,headings=headings,auto_size_columns=True)]
 else:
-    selector = [ss.selector("style",  sg.Combo)]
-style_layout = [
+    selector = [ss.selector("service",  sg.Combo)]
+service_layout = [
     [sg.HorizontalSeparator()],
-    [sg.Text("Repair Style - Child of BikeRepair / Grandgrandchild of Person, default bool True")],
+    [sg.Text("Repair service - Child of BikeRepair / Grandgrandchild of Person, default bool True")],
     selector,
-    [ss.field("style.name"), ss.field("style.example", sg.Checkbox)],
-    [ss.field("style.bike_repair_id", sg.Combo)],
-    [ss.actions("style",  default=True)],
+    [ss.field("service.name"), ss.field("service.example", sg.Checkbox)],
+    [ss.field("service.bike_repair_id", sg.Combo)],
+    [ss.actions("service",  default=True)],
 ]
 
 # -------------------------
@@ -235,7 +235,7 @@ layout = [[sg.Button("Form Prompt_Save", key="save")],[sg.Button("50 selector sw
 layout.append([sg.Col(person_layout, size=sz), sg.Col(building_layout, size=sz)])
 layout.append([sg.Col(bike_layout, size=sz), sg.Col(car_layout, size=sz)])
 if grandchild:
-    layout.append([sg.Col(bike_repair_layout, size=sz), sg.Col(style_layout, size=sz)])
+    layout.append([sg.Col(bike_repair_layout, size=sz), sg.Col(service_layout, size=sz)])
 
 window = sg.Window(
     "People and Vehicles",
@@ -256,18 +256,6 @@ def test_set_by_pk(number):
     for i in range(number):
         frm['person'].set_by_pk(2)
         frm['person'].set_by_pk(1)
-
-transform_dict = {'example' : {
-    'decode' : lambda row,col: bool(row[col]),
-    'encode' : lambda row,col: bool(row[col]),
-    }}
-
-# for q in frm.queries:
-#     frm[q].set_transform(ss.simple_transform)
-#     frm[q].add_simple_transform(transform_dict)
-#     
-# frm.requery_all()
-# frm.update_elements()
     
 # ---------
 # MAIN LOOP
