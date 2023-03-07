@@ -25,7 +25,7 @@ CREATE TABLE IF NOT EXISTS "bike_repair" (
 	"name"	TEXT NOT NULL DEFAULT 'Bike Repair Placeholder',
 	"example"	TEXT NOT NULL DEFAULT 'True',
 	"bike_id"	INTEGER NOT NULL,
-	FOREIGN KEY("bike_id") REFERENCES "bike"("id") ON UPDATE CASCADE,
+	FOREIGN KEY("bike_id") REFERENCES "bike"("id") ON UPDATE CASCADE ON DELETE CASCADE,
 	PRIMARY KEY("id" AUTOINCREMENT)
 );
 CREATE TABLE IF NOT EXISTS "service" (
@@ -33,16 +33,16 @@ CREATE TABLE IF NOT EXISTS "service" (
 	"name"	TEXT NOT NULL DEFAULT 'Bike Repair Placeholder',
 	"example"	TEXT NOT NULL DEFAULT True,
 	"bike_repair_id"	INTEGER NOT NULL,
-	FOREIGN KEY("bike_repair_id") REFERENCES "bike_repair"("id") ON UPDATE CASCADE,
+	FOREIGN KEY("bike_repair_id") REFERENCES "bike_repair"("id") ON UPDATE CASCADE ON DELETE CASCADE,
 	PRIMARY KEY("id" AUTOINCREMENT)
 );"""
 sql_grandchild_insert = """
 INSERT INTO "bike_repair" VALUES (1,'Wheel Repair','True',1);
 INSERT INTO "bike_repair" VALUES (2,'Seat Repair','TRUE',1);
-INSERT INTO "bike_repair" VALUES (3,'Seat Repair','true',1);
+INSERT INTO "bike_repair" VALUES (3,'Seat Repair','true',2);
 INSERT INTO "service" VALUES (1,'Basic',True,1);
 INSERT INTO "service" VALUES (2,'Premium',TRUE,1);
-INSERT INTO "service" VALUES (3,'Gold',true,1);
+INSERT INTO "service" VALUES (3,'Gold',true,2);
 """
 
 if not grandchild:
@@ -50,12 +50,18 @@ if not grandchild:
     sql_grandchild_insert = ""
 
 sql = f"""
+CREATE TABLE IF NOT EXISTS "person" (
+	"id"	INTEGER NOT NULL,
+	"name"	TEXT DEFAULT 'Person Placeholder',
+	"example"	INTEGER NOT NULL DEFAULT 0,
+	PRIMARY KEY("id" AUTOINCREMENT)
+);
 CREATE TABLE IF NOT EXISTS "car" (
 	"id"	INTEGER NOT NULL,
 	"name"	TEXT NOT NULL DEFAULT 'Car Placeholder',
 	"example"	TEXT NOT NULL DEFAULT 'False',
 	"person_id"	INTEGER NOT NULL,
-	FOREIGN KEY("person_id") REFERENCES "person"("id") ON UPDATE CASCADE,
+	FOREIGN KEY("person_id") REFERENCES "person"("id") ON UPDATE CASCADE ON DELETE CASCADE,
 	PRIMARY KEY("id" AUTOINCREMENT)
 );
 CREATE TABLE IF NOT EXISTS "bike" (
@@ -63,33 +69,27 @@ CREATE TABLE IF NOT EXISTS "bike" (
 	"name"	TEXT NOT NULL DEFAULT 'Bike Placeholder',
 	"example"	TEXT NOT NULL DEFAULT False,
 	"person_id"	INTEGER NOT NULL,
-	FOREIGN KEY("person_id") REFERENCES "person"("id") ON UPDATE CASCADE,
-	PRIMARY KEY("id" AUTOINCREMENT)
-);
-CREATE TABLE IF NOT EXISTS "person" (
-	"id"	INTEGER NOT NULL,
-	"name"	TEXT DEFAULT 'Person Placeholder',
-	"example"	INTEGER NOT NULL DEFAULT 0,
+	FOREIGN KEY("person_id") REFERENCES "person"("id") ON UPDATE CASCADE ON DELETE CASCADE,
 	PRIMARY KEY("id" AUTOINCREMENT)
 );
 CREATE TABLE IF NOT EXISTS "building" (
 	"id"	INTEGER NOT NULL,
 	"name"	TEXT DEFAULT 'Building Placeholder',
-	"person_id"	INTEGER NOT NULL,
+	"person_id"	INTEGER,
 	"example"	INTEGER NOT NULL DEFAULT 1,
-	FOREIGN KEY("person_id") REFERENCES "person"("id"),
+	FOREIGN KEY("person_id") REFERENCES "person"("id") ON DELETE SET NULL,
 	PRIMARY KEY("id" AUTOINCREMENT)
 );
 {sql_grandchild}
+INSERT INTO "person" VALUES (1,'Bill',0);
+INSERT INTO "person" VALUES (2,'Jessica',0);
+INSERT INTO "person" VALUES (3,'Drake',0);
 INSERT INTO "car" VALUES (1,'Landrover','False',1);
 INSERT INTO "car" VALUES (2,'Jeep','FALSE',2);
 INSERT INTO "car" VALUES (3,'GTO','false',3);
 INSERT INTO "bike" VALUES (1,'Unicycle',False,1);
 INSERT INTO "bike" VALUES (2,'Street Bike',false,2);
 INSERT INTO "bike" VALUES (3,'Moped',FALSE,3);
-INSERT INTO "person" VALUES (1,'Bill',0);
-INSERT INTO "person" VALUES (2,'Jessica',0);
-INSERT INTO "person" VALUES (3,'Drake',0);
 INSERT INTO "building" VALUES (1,'Tower',1,1);
 INSERT INTO "building" VALUES (2,'Mall',1,1);
 INSERT INTO "building" VALUES (3,'Cabin',1,1);
@@ -231,7 +231,7 @@ service_layout = [
 # Main Layout
 # -------------------------
 
-layout = [[sg.Button("Form Prompt_Save", key="save")],[sg.Button("50 selector switch test", key="-timeit-")]]
+layout = [[sg.Button("Form Prompt_Save", key="save")],[sg.Button("50 selector switch test", key="-timeit-")],[sg.Button("Display all Bike Repair", key="-display-")]]
 layout.append([sg.Col(person_layout, size=sz), sg.Col(building_layout, size=sz)])
 layout.append([sg.Col(bike_layout, size=sz), sg.Col(car_layout, size=sz)])
 if grandchild:
@@ -247,6 +247,7 @@ window = sg.Window(
 
 driver = ss.Sqlite(":memory:", sql_commands=sql)  # Create a new database connection
 frm = ss.Form(driver, bind_window=window)  # <=== Here is the magic!
+driver.con.execute('PRAGMA foreign_keys = ON')
 
 frm.set_prompt_save(True)
 
@@ -280,5 +281,9 @@ while True:
         et = time.time()
         elapsed_time = et - st
         print(elapsed_time)
+    elif event == "-display-":    
+        frm['bike_repair'].requery(filtered=False)
+        frm['person'].requery(filtered=False)
+        frm.update_elements()
     else:
         logger.info(f"This event ({event}) is not yet handled.")
