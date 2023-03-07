@@ -1,7 +1,5 @@
 ## NOTES FROM THIS EXAMPLE
-
-## Delete from parent, only cascades to child. Grandchildren are not deleted
-## Duplicate from parent, only cascades to child. Grandchildren are not duplicated
+## Duplicate from parent, only cascades to child.
 import PySimpleGUI as sg  ## pysimplegui 4.60.4
 import pysimplesql as ss
 import logging
@@ -13,6 +11,7 @@ grandchild = True  # Set this to False to only be parent/child
 quick_editor = True  # quick_editor=quick_editor
 enable_id = 1 # to see ID on tables.
 _tabs_ = "-TABGROUP-"
+foreign_keys = True # toggle to False to see default behavior
 
 logger = logging.getLogger(__name__)
 logging.basicConfig(
@@ -247,7 +246,8 @@ window = sg.Window(
 
 driver = ss.Sqlite(":memory:", sql_commands=sql)  # Create a new database connection
 frm = ss.Form(driver, bind_window=window)  # <=== Here is the magic!
-driver.con.execute('PRAGMA foreign_keys = ON')
+if foreign_keys:
+    driver.con.execute('PRAGMA foreign_keys = ON')
 
 frm.set_prompt_save(True)
 
