@@ -1,9 +1,14 @@
 ## NOTES FROM THIS EXAMPLE
 ## Duplicate from parent, only cascades to child.
 import PySimpleGUI as sg  ## pysimplegui 4.60.4
+sg.change_look_and_feel("SystemDefaultForReal")
 import pysimplesql as ss
 import logging
 import time
+
+custom = {"ttk_theme" : "xpnative"}
+ss.languagepack(ss.lp_monty_python)
+ss.themepack(custom)
 
 tables = True # Set this to False to use sg.Combo for selectors.
 sz = (600, 250) # for layouts
@@ -229,7 +234,7 @@ service_layout = [
 # -------------------------
 # Main Layout
 # -------------------------
-
+print(ss.themepack.ttk_theme)
 layout = [[sg.Button("Form Prompt_Save", key="save")],[sg.Button("50 selector switch test", key="-timeit-")],[sg.Button("Display all Bike Repair", key="-display-")]]
 layout.append([sg.Col(person_layout, size=sz), sg.Col(building_layout, size=sz)])
 layout.append([sg.Col(bike_layout, size=sz), sg.Col(car_layout, size=sz)])
@@ -242,6 +247,7 @@ window = sg.Window(
     finalize=True,
     grab_anywhere=True,
     alpha_channel=0,
+    ttk_theme = ss.themepack.ttk_theme
 )
 
 driver = ss.Sqlite(":memory:", sql_commands=sql)  # Create a new database connection
@@ -250,7 +256,6 @@ if foreign_keys:
     driver.con.execute('PRAGMA foreign_keys = ON')
 
 frm.set_prompt_save(True)
-
 window.SetAlpha(1)
 
 def test_set_by_pk(number):
