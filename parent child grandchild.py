@@ -3,7 +3,7 @@
 from pathlib import Path
 p = Path.cwd().parent
 import sys
-sys.path.append(str(p))
+sys.path.append(f'{str(p)}/pysimplesql/')
 import PySimpleGUI as sg  ## pysimplegui 4.60.4
 sg.change_look_and_feel("SystemDefaultForReal")
 import pysimplesql as ss
