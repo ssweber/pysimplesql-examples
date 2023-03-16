@@ -1,5 +1,11 @@
 ## NOTES FROM THIS EXAMPLE
 ## Duplicate from parent, only cascades to child.
+import platform
+import ctypes
+
+if platform.system() == "Windows":
+    ctypes.windll.shcore.SetProcessDpiAwareness(True) # Fix Bug on Windows when using multiple screens with different scaling   
+
 from pathlib import Path
 
 p = Path.cwd().parent
@@ -13,7 +19,10 @@ import pysimplesql as ss
 import logging
 import time
 
-custom = {"ttk_theme": "xpnative"}
+custom = {"ttk_theme": "xpnative",
+    'default_label_size' : (10, 1),
+    'default_element_size' : (20, 1),
+    'default_mline_size' : (30, 7),}
 ss.languagepack(ss.lp_monty_python)
 ss.themepack(custom)
 
