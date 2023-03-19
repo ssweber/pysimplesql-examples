@@ -17,6 +17,9 @@ sys.path.append(f"{str(p)}/pysimplesql/")
 import PySimpleGUI as sg  ## pysimplegui 4.60.4
 
 sg.change_look_and_feel("SystemDefaultForReal")
+# sg.change_look_and_feel("SystemDefault1")
+# sg.set_options(font=('Helvetica', 12))  # Set the font and font size for the table
+sg.set_options(font=('Roboto', 12))  # Set the font and font size for the table
 import pysimplesql as ss
 import logging
 import time
@@ -137,7 +140,8 @@ if tables:
     headings.add_column("example", "Example", width=20)
     selector = [
         ss.selector(
-            "building", sg.Table, num_rows=4, headings=headings, auto_size_columns=True
+            "building", sg.Table, num_rows=4, headings=headings, auto_size_columns=True,
+            alternating_row_color="#f2f2f2", row_height=25,
         )
     ]
 else:
