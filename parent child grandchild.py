@@ -4,7 +4,9 @@ import platform
 import ctypes
 
 if platform.system() == "Windows":
-    ctypes.windll.shcore.SetProcessDpiAwareness(True) # Fix Bug on Windows when using multiple screens with different scaling   
+    ctypes.windll.shcore.SetProcessDpiAwareness(
+        True
+    )  # Fix Bug on Windows when using multiple screens with different scaling
 
 from pathlib import Path
 
@@ -19,15 +21,17 @@ import pysimplesql as ss
 import logging
 import time
 
-custom = {"ttk_theme": "xpnative",
-    'default_label_size' : (10, 1),
-    'default_element_size' : (20, 1),
-    'default_mline_size' : (30, 7),}
+custom = {
+    "ttk_theme": "xpnative",
+    "default_label_size": (10, 1),
+    "default_element_size": (20, 1),
+    "default_mline_size": (30, 7),
+}
 ss.languagepack(ss.lp_monty_python)
 ss.themepack(custom)
 
 tables = True  # Set this to False to use sg.Combo for selectors.
-sz = (600, 250)  # for layouts
+sz = (700, 300)  # for layouts
 grandchild = True  # Set this to False to only be parent/child
 quick_editor = True  # quick_editor=quick_editor
 enable_id = 1  # to see ID on tables.
@@ -36,7 +40,7 @@ foreign_keys = False  # toggle to False to see default behavior
 
 logger = logging.getLogger(__name__)
 logging.basicConfig(
-    level=logging.INFO
+    level=logging.DEBUG
 )  # <=== You can set the logging level here (NOTSET,DEBUG,INFO,WARNING,ERROR,CRITICAL)
 
 sql_grandchild = """
@@ -289,9 +293,9 @@ service_layout = [
 # -------------------------
 print(ss.themepack.ttk_theme)
 layout = [
-    [sg.Button("Form Prompt_Save", key="save", use_ttk_buttons = True)],
-    [sg.Button("50 selector switch test", key="-timeit-", use_ttk_buttons = True)],
-    [sg.Button("Display all", key="-display-", use_ttk_buttons = True)],
+    [sg.Button("Form Prompt_Save", key="save", use_ttk_buttons=True)],
+    [sg.Button("50 selector switch test", key="-timeit-", use_ttk_buttons=True)],
+    [sg.Button("Display all", key="-display-", use_ttk_buttons=True)],
 ]
 layout.append([sg.Col(person_layout, size=sz), sg.Col(building_layout, size=sz)])
 layout.append([sg.Col(bike_layout, size=sz), sg.Col(car_layout, size=sz)])
@@ -315,6 +319,7 @@ if foreign_keys:
     driver.con.execute("PRAGMA foreign_keys = ON")
 
 frm.set_prompt_save(True)
+# frm.update_fk_relationship('bike_repair','bike_id',update_cascade=False)
 window.SetAlpha(1)
 
 
@@ -348,7 +353,8 @@ while True:
         elapsed_time = et - st
         print(elapsed_time)
     elif event == "-display-":
-        frm.requery_all(filtered=False)
+        frm["bike"].requery(filtered=False)
+        frm["bike_repair"].requery(filtered=False)
         frm.update_elements()
     else:
         logger.info(f"This event ({event}) is not yet handled.")
