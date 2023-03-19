@@ -35,7 +35,7 @@ ss.themepack(custom)
 
 tables = True  # Set this to False to use sg.Combo for selectors.
 sz = (700, 300)  # for layouts
-grandchild = True  # Set this to False to only be parent/child
+grandchild = False  # Set this to False to only be parent/child
 quick_editor = True  # quick_editor=quick_editor
 enable_id = 1  # to see ID on tables.
 _tabs_ = "-TABGROUP-"
@@ -43,7 +43,7 @@ foreign_keys = False  # toggle to False to see default behavior
 
 logger = logging.getLogger(__name__)
 logging.basicConfig(
-    level=logging.DEBUG
+    level=logging.INFO
 )  # <=== You can set the logging level here (NOTSET,DEBUG,INFO,WARNING,ERROR,CRITICAL)
 
 sql_grandchild = """
@@ -307,6 +307,8 @@ if grandchild:
     layout.append(
         [sg.Col(bike_repair_layout, size=sz), sg.Col(service_layout, size=sz)]
     )
+    
+layout.append([sg.StatusBar('                                                        ', key='status_bar')])
 
 window = sg.Window(
     "People and Vehicles",
@@ -318,27 +320,29 @@ window = sg.Window(
 )
 
 driver = ss.Sqlite(":memory:", sql_commands=sql)  # Create a new database connection
-frm = ss.Form(driver, bind_window=window)  # <=== Here is the magic!
+frm = ss.Form(driver, bind_window=window, prompt_save = False, save_quiet=True)  # <=== Here is the magic!
 if foreign_keys:
     driver.con.execute("PRAGMA foreign_keys = ON")
 
-frm.set_prompt_save(True)
-# frm.update_fk_relationship('bike_repair','bike_id',update_cascade=False)
+frm.set_prompt_save(ss.AUTOSAVE_MODE)
+frm.set_fk_column_cascade('bike_repair','bike_id',update_cascade=False)
 window.SetAlpha(1)
-
 
 def test_set_by_pk(number):
     for i in range(number):
         frm["person"].set_by_pk(2)
         frm["person"].set_by_pk(1)
 
-
+window['status_bar'].update(value="")
+last_val = ""
+new_val = ""
+step = 1
 # ---------
 # MAIN LOOP
 # ---------
 
 while True:
-    event, values = window.read()
+    event, values = window.read(timeout=500)
     if event in (sg.WIN_CLOSED, "Exit", "-ESCAPE-"):
         frm.close()  # <= ensures proper closing of the sqlite database and runs a database optimization
         window.close()
@@ -348,6 +352,17 @@ while True:
     ):  # <=== let PySimpleSQL process its own events! Simple!
         logger.info(f"PySimpleDB event handler handled the event {event}!")
         # handle button clicks
+    elif event == "__TIMEOUT__":
+        step += 1
+        new_val = frm.popup.last_info
+        if new_val:
+            if new_val != last_val:
+                step = 0
+                window['status_bar'].update(value=frm.popup.last_info[1])
+                last_val = frm.popup.last_info
+        if step > 10:
+            step = 0
+            window['status_bar'].update(value=" ")
     elif event == "save":
         frm.prompt_save()  # Prompt save when tabs change
     elif event == "-timeit-":
