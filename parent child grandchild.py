@@ -3,10 +3,9 @@
 import platform
 import ctypes
 
+# Fix Bug on Windows when using multiple screens with different scaling
 if platform.system() == "Windows":
-    ctypes.windll.shcore.SetProcessDpiAwareness(
-        True
-    )  # Fix Bug on Windows when using multiple screens with different scaling
+    ctypes.windll.shcore.SetProcessDpiAwareness(True)
 
 from pathlib import Path
 
@@ -19,7 +18,7 @@ import PySimpleGUI as sg  ## pysimplegui 4.60.4
 sg.change_look_and_feel("SystemDefaultForReal")
 # sg.change_look_and_feel("SystemDefault1")
 # sg.set_options(font=('Helvetica', 12))  # Set the font and font size for the table
-sg.set_options(font=('Roboto', 12))  # Set the font and font size for the table
+sg.set_options(font=("Roboto", 11))  # Set the font and font size for the table
 import pysimplesql as ss
 import logging
 import time
@@ -29,6 +28,7 @@ custom = {
     "default_label_size": (10, 1),
     "default_element_size": (20, 1),
     "default_mline_size": (30, 7),
+    "search": "  Search  ",
 }
 ss.languagepack(ss.lp_monty_python)
 ss.themepack(custom)
@@ -140,8 +140,13 @@ if tables:
     headings.add_column("example", "Example", width=20)
     selector = [
         ss.selector(
-            "building", sg.Table, num_rows=4, headings=headings, auto_size_columns=True,
-            alternating_row_color="#f2f2f2", row_height=25,
+            "building",
+            sg.Table,
+            num_rows=4,
+            headings=headings,
+            auto_size_columns=True,
+            alternating_row_color="#f2f2f2",
+            row_height=25,
         )
     ]
 else:
@@ -307,8 +312,8 @@ if grandchild:
     layout.append(
         [sg.Col(bike_repair_layout, size=sz), sg.Col(service_layout, size=sz)]
     )
-    
-layout.append([sg.StatusBar('                                                        ', key='status_bar')])
+
+layout.append([sg.StatusBar(" " * 100, key="status_bar")])
 
 window = sg.Window(
     "People and Vehicles",
@@ -320,29 +325,34 @@ window = sg.Window(
 )
 
 driver = ss.Sqlite(":memory:", sql_commands=sql)  # Create a new database connection
-frm = ss.Form(driver, bind_window=window, prompt_save = False, save_quiet=True)  # <=== Here is the magic!
+frm = ss.Form(
+    driver, bind_window=window, prompt_save=ss.AUTOSAVE_MODE, save_quiet=True
+)  # <=== Here is the magic!
 if foreign_keys:
     driver.con.execute("PRAGMA foreign_keys = ON")
 
 frm.set_prompt_save(ss.AUTOSAVE_MODE)
-frm.set_fk_column_cascade('bike_repair','bike_id',update_cascade=False)
+frm.set_fk_column_cascade("bike_repair", "bike_id", update_cascade=False)
 window.SetAlpha(1)
+
 
 def test_set_by_pk(number):
     for i in range(number):
         frm["person"].set_by_pk(2)
         frm["person"].set_by_pk(1)
 
-window['status_bar'].update(value="")
+
+# variables for updating our sg.StatusBar
+seconds_to_display = 3
 last_val = ""
 new_val = ""
-step = 1
+counter = 1
 # ---------
 # MAIN LOOP
 # ---------
 
 while True:
-    event, values = window.read(timeout=500)
+    event, values = window.read(timeout=100)
     if event in (sg.WIN_CLOSED, "Exit", "-ESCAPE-"):
         frm.close()  # <= ensures proper closing of the sqlite database and runs a database optimization
         window.close()
@@ -353,16 +363,22 @@ while True:
         logger.info(f"PySimpleDB event handler handled the event {event}!")
         # handle button clicks
     elif event == "__TIMEOUT__":
-        step += 1
-        new_val = frm.popup.last_info
-        if new_val:
-            if new_val != last_val:
-                step = 0
-                window['status_bar'].update(value=frm.popup.last_info[1])
-                last_val = frm.popup.last_info
-        if step > 10:
-            step = 0
-            window['status_bar'].update(value=" ")
+        # --------------------------------------------------
+        # Status bar updating
+        # --------------------------------------------------
+        # Using the same timeout, we can update our sg.StatusBar with save messages
+        counter += 1
+        new_val = frm.popup.last_info_msg
+        # If there is a new info popup msg, reset our counter and update the sg.StatusBar
+        if new_val != last_val:
+            counter = 0
+            window["status_bar"].update(value=new_val)
+            last_val = new_val
+        # After counter reaches seconds limit, clear sg.StatusBar and frm.popup.last_info_msg
+        if counter > seconds_to_display * 10:
+            counter = 0
+            frm.popup.last_info_msg = ""
+            window["status_bar"].update(value="")
     elif event == "save":
         frm.prompt_save()  # Prompt save when tabs change
     elif event == "-timeit-":
