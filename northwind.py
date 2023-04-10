@@ -1,5 +1,6 @@
 import logging
 import sys
+import locale
 from pathlib import Path 
     
 import PySimpleGUI as sg  ## pysimplegui 4.60.4
@@ -35,8 +36,9 @@ _tabs_ = "-TABGROUP-"
 # -------------------------
 # Define the columns for the table selector using the TableHeading convenience class.  This will also allow sorting!
 headings = ss.TableHeadings(sort_enable=True)
-headings.add_column("CompanyName", "Company", width=30)
+headings.add_column("CustomerName", "Company", width=30)
 headings.add_column("ContactName", "Contact", width=30)
+headings.add_column("Country", "Country", width=30)
 selector = [
     ss.selector(
         "Customers",
@@ -64,7 +66,7 @@ window = sg.Window(
     ttk_theme=ss.themepack.ttk_theme,
     icon=ss.themepack.icon
 )
-# driver = ss.Driver.sqlite("./northwind.db")  # Create a new database connection
+
 driver = ss.Driver.sqlite(":memory:", sql_script='northwind.sql')  # Create a new database connection
 
 # Here is the magic!
@@ -76,6 +78,8 @@ frm = ss.Form(
 window.SetAlpha(1)
 frm.update_elements()
 
+print(sys.getfilesystemencoding())
+print(locale.getpreferredencoding())
 
 # --------------------------------------------------------------------------------------
 # MAIN LOOP

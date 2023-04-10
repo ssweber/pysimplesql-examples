@@ -8,7 +8,6 @@
 --     Run the following command in a terminal window.
 --     sqlite3 Northwind.db
 --     Copy and paste the SQL below into the terminal window to populate the Northwind database.
-
 DROP TABLE IF EXISTS OrderDetails;
 DROP TABLE IF EXISTS Orders;
 DROP TABLE IF EXISTS Products;
