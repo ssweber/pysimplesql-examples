@@ -2,6 +2,7 @@ import json
 import pprint
 import importlib.util
 import sys
+from pathlib import Path
 
 import PySimpleGUI as sg
 
@@ -20,8 +21,9 @@ def main():
     spec.loader.exec_module(output)
    
     mapped_theme = map_freedesktop_icons(output.output)
-
-    with open('mapped.py', 'w') as file:
+    
+    new_file = Path(file).parents[0].joinpath(OUTPUT_FILENAME)
+    with open(new_file, 'w') as file:
         pp = pprint.PrettyPrinter(indent=4, width=10000, stream=file)
         pp.pprint(mapped_theme)
 

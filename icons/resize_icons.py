@@ -53,7 +53,7 @@ def main():
     if answer == 'Yes':
         map_names = mapping.values()
     
-    resize(folder, (22,22), '22', only_pysimplesql_names=True)
+    resize(folder, (16,16), '16', only_pysimplesql_names=True)
 
 # folder = 'images'
 # new_dimension = (width, height)
