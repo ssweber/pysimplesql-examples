@@ -26,11 +26,36 @@ def main():
         sg.popup_cancel('Cancelled - No valid folder entered')
         return
     
+    answer = sg.popup_yes_no('Only encode icons with pysimplesql maps?')
+    
+    mapping = {
+    "edit_protect": 'system-lock-screen',
+    "quick_edit": 'document-edit',
+    "save": 'document-save',
+    "first": 'go-first',
+    "previous": 'go-previous',
+    "next": 'go-next',
+    "last": 'go-last',
+    "insert": 'document-new',
+    "delete": 'edit-delete',
+    "duplicate": 'edit-copy',
+    "search": 'system-search',
+    }
+    
+    global map_names
+    map_names = []
+    if answer == 'Yes':
+        map_names = mapping.values()
+    
     base64_images = {}
     for i, file in enumerate(namesonly):
+        stem = f'{file[:file.index(".")]}'
+        if map_names:
+            if stem not in map_names:
+                continue
         contents = open(os.path.join(folder, file), 'rb').read()
         encoded = base64.b64encode(contents)
-        base64_images[f'{file[:file.index(".")]}'] = encoded
+        base64_images[stem] = encoded
         sg.OneLineProgressMeter('Base64 Encoding', i+1, len(namesonly), key='-METER-')
     
     outfile = open(os.path.join(folder, OUTPUT_FILENAME), 'w')
