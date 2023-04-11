@@ -28,8 +28,11 @@ custom = {
     "default_label_size": (10, 1),
     "default_element_size": (20, 1),
     "default_mline_size": (30, 7),}
+
+custom = custom | ss.tp_crystal_remix
+
 ss.languagepack(ss.lp_monty_python)
-ss.themepack(ss.tp_crystal_remix)
+ss.themepack(custom)
 
 tables = True  # Set this to False to use sg.Combo for selectors.
 sz = (900, 300)  # for layouts
