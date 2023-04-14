@@ -366,6 +366,7 @@ def callback(event):
             for e in frm[data_key].selector:
                 element = e['element']
                 if element.widget == tk_widget and element.metadata["TableHeading"]:
+                    print(data_key)
                     
                     # found a table we can edit, don't allow another double-click
                     edit = True
@@ -402,7 +403,7 @@ def callback(event):
                         
                         # enable browsing and sorting
                         element.widget.configure(select=sg.TABLE_SELECT_MODE_BROWSE)
-                        element.metadata["TableHeading"]._sort_enable = True
+                        element.metadata["TableHeading"]._sort_enable = True # I can't get it re-enabled. Am I doing this wrong?
                         frm.edit_protect()
                         
                         # reset edit
