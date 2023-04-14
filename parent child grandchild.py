@@ -338,66 +338,114 @@ window.SetAlpha(1)
 
 edit = False
 
-def callback(event):
+def callback(event):  
     global edit
+    global textvariable # needs to be global, or ttk entry garbage collects it.
+    
+    # only allow 1 edit at a time
+    if edit:
+        return
+
+    # if double click a treeview
     if event.widget.__class__.__name__ == 'Treeview':
         tk_widget = event.widget
+        
+        # identify region
         region = tk_widget.identify('region', event.x, event.y)
+
         if region == 'cell':
+            # get row and column
             row = int(tk_widget.identify_row(event.y))
             col_identified = tk_widget.identify_column(event.x)
             if col_identified:      # Sometimes tkinter returns a value of '' which would cause an error if cast to an int
                 column = int(tk_widget.identify_column(event.x)[1:])-1
         else:
             return
-        
-        if edit:
-            return
 
-        for data_key in frm.datasets:
-            if len(frm[data_key].selector):
-                for e in frm[data_key].selector:
-                    element = e['element']
-                    if element.widget == tk_widget and element.metadata["TableHeading"]:
-                        edit = True
-                        element.widget.configure(select=sg.TABLE_SELECT_MODE_NONE)
-                        element.metadata["TableHeading"]._sort_enable = False
-                        def callback(event, row, col, text, key):
-                            global edit
+        for data_key in [data_key for data_key in frm.datasets if len(frm[data_key].selector)]:
+            for e in frm[data_key].selector:
+                element = e['element']
+                if element.widget == tk_widget and element.metadata["TableHeading"]:
+                    
+                    # found a table we can edit, don't allow another double-click
+                    edit = True
+                    
+                    # disable browsing and sorting
+                    element.widget.configure(select=sg.TABLE_SELECT_MODE_NONE)
+                    element.metadata["TableHeading"]._sort_enable = False
+                    frm.edit_protect()
+                    
+                    # create our callback (to be used below)
+                    def edit_callback(event, row, col, text, save):
+                        global edit
+                        
+                        # if a button got us here, event is actually Entry element
+                        if event.__class__.__name__ == "Entry":
+                            widget = event
+                        
+                        # otherwise, use event widget
+                        else:
                             widget = event.widget
-                            if key == 'Return':
-                                text = widget.get()
-                                values = list(table_element.item(row, 'values'))
-                                values[col] = text
-                                table_element.item(row, values=values)
-                                dataset_row[column_names[col-1]] = text
-                                frm[data_key].save_record()
-                            widget.destroy()
-                            widget.master.destroy()
-                            element.widget.configure(select=sg.TABLE_SELECT_MODE_BROWSE)
-                            element.metadata["TableHeading"]._sort_enable = True
-                            edit = False
+                            
+                        # 
+                        if save:
+                            text = widget.get()
+                            values = list(table_element.item(row, 'values'))
+                            values[col] = text
+                            table_element.item(row, values=values)
+                            dataset_row[column_names[col-1]] = text
+                            frm[data_key].save_record()
+                            
+                        # destroy window
+                        widget.destroy()
+                        widget.master.destroy()
                         
+                        # enable browsing and sorting
+                        element.widget.configure(select=sg.TABLE_SELECT_MODE_BROWSE)
+                        element.metadata["TableHeading"]._sort_enable = True
+                        frm.edit_protect()
                         
-                        column_names = element.metadata["TableHeading"].columns()
-                        dataset_row = frm[data_key].rows[frm[data_key].current_index]
-                        table_element = element.Widget
-                        root = table_element.master
-                        frame = sg.tk.Frame(root)
-
-                        text = table_element.item(row, "values")[column]
-                        x, y, width, height = table_element.bbox(row, column)                        
-                        
-                        frame.place(x=x, y=y, anchor="nw", width=width, height=height)
-                        textvariable = sg.tk.StringVar()
-                        textvariable.set(text)
-                        entry = sg.tk.Entry(frame, textvariable=textvariable, justify='left')
-                        entry.pack(expand=True, fill="both")
-                        entry.select_range(0, sg.tk.END)
-                        entry.icursor(sg.tk.END)
-                        entry.focus_force()
-                        entry.bind("<Return>", lambda e, r=row, c=column, t=text, k='Return':callback(e, r, c, t, k))
-                        entry.bind("<Escape>", lambda e, r=row, c=column, t=text, k='Escape':callback(e, r, c, t, k))
+                        # reset edit
+                        edit = False
+                  
+                    # get column name
+                    column_names = element.metadata["TableHeading"].columns()
+                    # get dataset_row
+                    dataset_row = frm[data_key].rows[frm[data_key].current_index]
+                    
+                    # use table_element to distinguish
+                    table_element = element.Widget
+                    root = table_element.master
+                    
+                    # get cell text, coordinates, width and height
+                    text = table_element.item(row, "values")[column]
+                    x, y, width, height = table_element.bbox(row, column)
+                    
+                    # float a frame over the cell
+                    frame = sg.tk.Frame(root)
+                    frame.place(x=x, y=y, anchor="nw", width=width, height=height)
+                    
+                    # create ttk.Entry / StringVar and place in frame
+                    textvariable = sg.tk.StringVar()
+                    textvariable.set(text)
+                    entry = sg.ttk.Entry(frame, textvariable=textvariable, justify='left')
+                    
+                    # bind text to Return (for save), and Escape (for discard)
+                    entry.bind("<Return>", lambda e, r=row, c=column, t=text, s=True:edit_callback(e, r, c, t, s))
+                    entry.bind("<Escape>", lambda e, r=row, c=column, t=text, s=False:edit_callback(e, r, c, t, s))
+                    
+                    # buttons
+                    save = sg.tk.Button(frame, text="\u2714", command = lambda e=entry, r=row, c=column, t=text, s=True:edit_callback(e, r, c, t, s))
+                    discard = sg.tk.Button(frame, text="\u274E", command = lambda e=entry, r=row, c=column, t=text, s=False:edit_callback(e, r, c, t, s))
+                    discard.pack(side='right')
+                    save.pack(side='right')
+                    
+                    # have entry use remaining space
+                    entry.pack(side='left',expand=True, fill="both")
+                    
+                    # select text and focus to begin with
+                    entry.select_range(0, sg.tk.END)
+                    entry.focus_force()
 
 window.TKroot.bind("<Double-Button-1>", callback)
 
