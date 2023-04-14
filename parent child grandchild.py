@@ -336,6 +336,72 @@ frm.set_prompt_save(ss.AUTOSAVE_MODE)
 frm.set_fk_column_cascade("bike_repair", "bike_id", update_cascade=False)
 window.SetAlpha(1)
 
+edit = False
+
+def callback(event):
+    global edit
+    if event.widget.__class__.__name__ == 'Treeview':
+        tk_widget = event.widget
+        region = tk_widget.identify('region', event.x, event.y)
+        if region == 'cell':
+            row = int(tk_widget.identify_row(event.y))
+            col_identified = tk_widget.identify_column(event.x)
+            if col_identified:      # Sometimes tkinter returns a value of '' which would cause an error if cast to an int
+                column = int(tk_widget.identify_column(event.x)[1:])-1
+        else:
+            return
+        
+        if edit:
+            return
+
+        for data_key in frm.datasets:
+            if len(frm[data_key].selector):
+                for e in frm[data_key].selector:
+                    element = e['element']
+                    if element.widget == tk_widget and element.metadata["TableHeading"]:
+                        edit = True
+                        element.widget.configure(select=sg.TABLE_SELECT_MODE_NONE)
+                        element.metadata["TableHeading"]._sort_enable = False
+                        def callback(event, row, col, text, key):
+                            global edit
+                            widget = event.widget
+                            if key == 'Return':
+                                text = widget.get()
+                                values = list(table_element.item(row, 'values'))
+                                values[col] = text
+                                table_element.item(row, values=values)
+                                dataset_row[column_names[col-1]] = text
+                                frm[data_key].save_record()
+                            widget.destroy()
+                            widget.master.destroy()
+                            element.widget.configure(select=sg.TABLE_SELECT_MODE_BROWSE)
+                            element.metadata["TableHeading"]._sort_enable = True
+                            edit = False
+                        
+                        
+                        column_names = element.metadata["TableHeading"].columns()
+                        dataset_row = frm[data_key].rows[frm[data_key].current_index]
+                        table_element = element.Widget
+                        root = table_element.master
+                        frame = sg.tk.Frame(root)
+
+                        text = table_element.item(row, "values")[column]
+                        x, y, width, height = table_element.bbox(row, column)                        
+                        
+                        frame.place(x=x, y=y, anchor="nw", width=width, height=height)
+                        textvariable = sg.tk.StringVar()
+                        textvariable.set(text)
+                        entry = sg.tk.Entry(frame, textvariable=textvariable, justify='left')
+                        entry.pack(expand=True, fill="both")
+                        entry.select_range(0, sg.tk.END)
+                        entry.icursor(sg.tk.END)
+                        entry.focus_force()
+                        entry.bind("<Return>", lambda e, r=row, c=column, t=text, k='Return':callback(e, r, c, t, k))
+                        entry.bind("<Escape>", lambda e, r=row, c=column, t=text, k='Escape':callback(e, r, c, t, k))
+
+window.TKroot.bind("<Double-Button-1>", callback)
+
+frm.force_save = True
 
 def test_set_by_pk(number):
     for i in range(number):
