@@ -375,44 +375,11 @@ def callback(event):
                     element.widget.configure(select=sg.TABLE_SELECT_MODE_NONE)
                     element.metadata["TableHeading"]._sort_enable = False
                     frm.edit_protect()
-                    
-                    # create our callback (to be used below)
-                    def edit_callback(event, row, col, text, save):
-                        global edit
-                        
-                        # if a button got us here, event is actually Entry element
-                        if event.__class__.__name__ == "Entry":
-                            widget = event
-                        
-                        # otherwise, use event widget
-                        else:
-                            widget = event.widget
-                            
-                        # 
-                        if save:
-                            text = widget.get()
-                            values = list(table_element.item(row, 'values'))
-                            values[col] = text
-                            table_element.item(row, values=values)
-                            dataset_row[column_names[col-1]] = text
-                            frm[data_key].save_record()
-                            
-                        # destroy window
-                        widget.destroy()
-                        widget.master.destroy()
-                        
-                        # enable browsing and sorting
-                        element.widget.configure(select=sg.TABLE_SELECT_MODE_BROWSE)
-                        element.metadata["TableHeading"]._sort_enable = True # I can't get it re-enabled. Am I doing this wrong?
-                        frm.edit_protect()
-                        
-                        # reset edit
-                        edit = False
                   
                     # get column name
                     column_names = element.metadata["TableHeading"].columns()
                     # get dataset_row
-                    dataset_row = frm[data_key].rows[frm[data_key].current_index]
+                    #dataset_row = frm[data_key].rows[frm[data_key].current_index]
                     
                     # use table_element to distinguish
                     table_element = element.Widget
@@ -432,12 +399,12 @@ def callback(event):
                     entry = sg.ttk.Entry(frame, textvariable=textvariable, justify='left')
                     
                     # bind text to Return (for save), and Escape (for discard)
-                    entry.bind("<Return>", lambda e, r=row, c=column, t=text, s=True:edit_callback(e, r, c, t, s))
-                    entry.bind("<Escape>", lambda e, r=row, c=column, t=text, s=False:edit_callback(e, r, c, t, s))
+                    entry.bind("<Return>", _EditCallbackWrapper(frm, data_key, element.metadata["TableHeading"], table_element, column_names, row, column, text, True))
+                    entry.bind("<Escape>", _EditCallbackWrapper(frm, data_key, element.metadata["TableHeading"], table_element, column_names, row, column, text, False))
                     
                     # buttons
-                    save = sg.tk.Button(frame, text="\u2714", command = lambda e=entry, r=row, c=column, t=text, s=True:edit_callback(e, r, c, t, s))
-                    discard = sg.tk.Button(frame, text="\u274E", command = lambda e=entry, r=row, c=column, t=text, s=False:edit_callback(e, r, c, t, s))
+                    save = sg.tk.Button(frame, text="\u2714", command = _EditCallbackWrapper(frm, data_key, element.metadata["TableHeading"], table_element, column_names, row, column, text, True, entry))
+                    discard = sg.tk.Button(frame, text="\u274E", command = _EditCallbackWrapper(frm, data_key, element.metadata["TableHeading"], table_element, column_names, row, column, text, False, entry))
                     discard.pack(side='right')
                     save.pack(side='right')
                     
@@ -447,6 +414,88 @@ def callback(event):
                     # select text and focus to begin with
                     entry.select_range(0, sg.tk.END)
                     entry.focus_force()
+                    
+class _EditCallbackWrapper:
+
+    """Internal class used when sg.Table cells are double-clicked."""
+
+    def __init__(self, frm_reference, data_key, table_heading, table_element, column_names, row, column, text, save, entry=None):
+        """
+        Create a new _EditCallbackWrapper object.
+
+        :param frm_reference: `Form` object
+        :param data_key: `DataSet` key
+        :param element: PySimpleGUI sg.Table element
+        :param table_heading: `TableHeading` object
+        :returns: None
+        """
+        self.frm: Form = frm_reference
+        self.data_key = data_key
+        self.table_heading: TableHeadings = table_heading
+        self.table_element = table_element
+        self.column_names = column_names
+        self.row = row
+        self.column = column
+        self.text = text
+        self.save = save
+        self.entry = entry
+
+    def __call__(self, event = None):
+        # create our callback (to be used below)
+        global edit
+        
+        if event is None:
+            event = self.entry
+        
+        # if a button got us here, event is actually Entry element
+        if event.__class__.__name__ == "Entry":
+            widget = event
+        
+        # otherwise, use event widget
+        else:
+            widget = event.widget
+            
+        # 
+        if self.save:
+            # get current entry text
+            self.text = widget.get()
+            
+            # get current table row
+            values = list(self.table_element.item(self.row, 'values'))
+            
+            # update cell with new text
+            values[self.column] = self.text
+            
+            # push changes to table element row
+            self.table_element.item(self.row, values=values)
+            
+            # update dataset row
+            # TODO. We need to have a backup current row handy to compare.
+            #-------------------
+            # get current row
+            current_index = self.frm[self.data_key].current_index
+            current_row = self.frm[self.data_key].get_current_row().copy()
+            
+            # update cell with new text
+            current_row[self.column_names[self.column-1]] = self.text
+            # push row to dataset
+            self.frm[self.data_key].rows[current_index] = current_row
+            self.frm[self.data_key].save_record()
+            
+        # destroy window
+        widget.destroy()
+        widget.master.destroy()
+        
+        # enable browsing and sorting
+        self.table_element.configure(select=sg.TABLE_SELECT_MODE_BROWSE)
+        self.table_heading._sort_enable = True # I can't get it re-enabled. Am I doing this wrong?
+        self.frm.edit_protect()
+        
+        # reset edit
+        edit = False
+        
+def update_table_row(table, row, values):
+    table.item(row, values=values)
 
 window.TKroot.bind("<Double-Button-1>", callback)
 
