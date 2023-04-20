@@ -27,7 +27,8 @@ custom = {
     "ttk_theme": "xpnative",
     "default_label_size": (10, 1),
     "default_element_size": (20, 1),
-    "default_mline_size": (30, 7),}
+    "default_mline_size": (30, 7),
+}
 
 custom = custom | ss.tp_crystal_remix
 
@@ -156,12 +157,12 @@ else:
 building_layout = [
     [sg.Text("Buildings - Childless Parent, default int 1")],
     selector,
-    [ss.field("building.person_id", sg.Combo)],
     [
-        ss.field("building.name"),
-        ss.field("building.example", sg.Checkbox, default=False),
+        ss.actions(
+            "building",
+            default=True,
+        )
     ],
-    [ss.actions("building", default=True,)],
     [sg.HorizontalSeparator()],
 ]
 
@@ -327,99 +328,220 @@ window = sg.Window(
 
 driver = ss.Sqlite(":memory:", sql_commands=sql)  # Create a new database connection
 frm = ss.Form(
-    driver, bind_window=window, prompt_save=ss.AUTOSAVE_MODE, save_quiet=True
+    driver,
+    bind_window=window,
+    prompt_save=ss.AUTOSAVE_MODE,  # save_quiet=True
 )  # <=== Here is the magic!
 if foreign_keys:
     driver.con.execute("PRAGMA foreign_keys = ON")
 
-frm.set_prompt_save(ss.AUTOSAVE_MODE)
-frm.set_fk_column_cascade("bike_repair", "bike_id", update_cascade=False)
+# frm.set_prompt_save(ss.AUTOSAVE_MODE)
+# frm.set_fk_column_cascade("bike_repair", "bike_id", update_cascade=False)
 window.SetAlpha(1)
 
 edit = False
 
-def callback(event):  
+
+def callback(event):
     global edit
-    global textvariable # needs to be global, or ttk entry garbage collects it.
-    
+    global textvariable  # needs to be global, or ttk entry garbage collects it.
+
     # only allow 1 edit at a time
     if edit:
+        print(edit)
         return
 
     # if double click a treeview
-    if event.widget.__class__.__name__ == 'Treeview':
+    if event.widget.__class__.__name__ == "Treeview":
         tk_widget = event.widget
-        
-        # identify region
-        region = tk_widget.identify('region', event.x, event.y)
 
-        if region == 'cell':
+        # identify region
+        region = tk_widget.identify("region", event.x, event.y)
+
+        if region == "cell":
             # get row and column
             row = int(tk_widget.identify_row(event.y))
             col_identified = tk_widget.identify_column(event.x)
-            if col_identified:      # Sometimes tkinter returns a value of '' which would cause an error if cast to an int
-                column = int(tk_widget.identify_column(event.x)[1:])-1
+            if (
+                col_identified
+            ):  # Sometimes tkinter returns a value of '' which would cause an error if cast to an int
+                column = int(tk_widget.identify_column(event.x)[1:]) - 1
         else:
             return
 
-        for data_key in [data_key for data_key in frm.datasets if len(frm[data_key].selector)]:
+        for data_key in [
+            data_key for data_key in frm.datasets if len(frm[data_key].selector)
+        ]:
             for e in frm[data_key].selector:
-                element = e['element']
+                element = e["element"]
                 if element.widget == tk_widget and element.metadata["TableHeading"]:
                     print(data_key)
-                    
+
                     # found a table we can edit, don't allow another double-click
                     edit = True
-                    
+
                     # disable browsing and sorting
                     element.widget.configure(select=sg.TABLE_SELECT_MODE_NONE)
                     element.metadata["TableHeading"]._sort_enable = False
                     frm.edit_protect()
-                  
+
                     # get column name
                     column_names = element.metadata["TableHeading"].columns()
+                    heading_column = column_names[column - 1]
                     # get dataset_row
-                    #dataset_row = frm[data_key].rows[frm[data_key].current_index]
-                    
-                    # use table_element to distinguish
-                    table_element = element.Widget
-                    root = table_element.master
-                    
-                    # get cell text, coordinates, width and height
-                    text = table_element.item(row, "values")[column]
-                    x, y, width, height = table_element.bbox(row, column)
-                    
-                    # float a frame over the cell
-                    frame = sg.tk.Frame(root)
-                    frame.place(x=x, y=y, anchor="nw", width=width, height=height)
-                    
-                    # create ttk.Entry / StringVar and place in frame
-                    textvariable = sg.tk.StringVar()
-                    textvariable.set(text)
-                    entry = sg.ttk.Entry(frame, textvariable=textvariable, justify='left')
-                    
-                    # bind text to Return (for save), and Escape (for discard)
-                    entry.bind("<Return>", _EditCallbackWrapper(frm, data_key, element.metadata["TableHeading"], table_element, column_names, row, column, text, True))
-                    entry.bind("<Escape>", _EditCallbackWrapper(frm, data_key, element.metadata["TableHeading"], table_element, column_names, row, column, text, False))
-                    
-                    # buttons
-                    save = sg.tk.Button(frame, text="\u2714", command = _EditCallbackWrapper(frm, data_key, element.metadata["TableHeading"], table_element, column_names, row, column, text, True, entry))
-                    discard = sg.tk.Button(frame, text="\u274E", command = _EditCallbackWrapper(frm, data_key, element.metadata["TableHeading"], table_element, column_names, row, column, text, False, entry))
-                    discard.pack(side='right')
-                    save.pack(side='right')
-                    
-                    # have entry use remaining space
-                    entry.pack(side='left',expand=True, fill="both")
-                    
-                    # select text and focus to begin with
-                    entry.select_range(0, sg.tk.END)
-                    entry.focus_force()
-                    
+                    if (
+                        column > 0
+                        and heading_column != frm[data_key].pk_column
+                    ):
+                        combobox = False
+                        rels = ss.Relationship.get_relationships(frm[data_key].table)
+                        for rel in rels:
+                            if rel.fk_column == heading_column:
+                                target_table = frm[rel.parent_table]
+                                pk_column = target_table.pk_column
+                                fk_column = rel.fk_column
+                                description = target_table.description_column
+                                combobox = True
+                                break
+
+                        # use table_element to distinguish
+                        table_element = element.Widget
+                        root = table_element.master
+
+                        # get cell text, coordinates, width and height
+                        text = table_element.item(row, "values")[column]
+                        x, y, width, height = table_element.bbox(row, column)
+
+                        # float a frame over the cell
+                        frame = sg.ttk.Frame(root)
+                        frame.place(x=x, y=y, anchor="nw", width=width, height=height)
+
+                        # create ttk.Entry / StringVar and place in frame
+                        textvariable = sg.tk.StringVar()
+                        textvariable.set(text)
+                        if not combobox:
+                            entry = sg.ttk.Entry(
+                                frame, textvariable=textvariable, justify="left"
+                            )
+                        elif combobox:
+                            lst = []
+                            for r in target_table.rows:
+                                lst.append(ss.ElementRow(r[pk_column], r[description]))
+
+                            # Map the value to the combobox, by getting the description_column
+                            # and using it to set the value
+                            for r in target_table.rows:
+                                if r[target_table.pk_column] == frm[data_key][fk_column]:
+                                    for entry in lst:
+                                        if entry.get_pk() == frm[data_key][fk_column]:
+                                            updated_val = entry
+                                            break
+                                    break
+                            entry = sg.ttk.Combobox(
+                                frame, textvariable=textvariable, justify="left"
+                            )
+                            entry['values'] = lst
+
+                        # bind text to Return (for save), and Escape (for discard)
+                        entry.bind(
+                            "<Return>",
+                            _EditCallbackWrapper(
+                                frm,
+                                data_key,
+                                element.metadata["TableHeading"],
+                                table_element,
+                                column_names,
+                                row,
+                                column,
+                                text,
+                                True,
+                            ),
+                        )
+                        entry.bind(
+                            "<Escape>",
+                            _EditCallbackWrapper(
+                                frm,
+                                data_key,
+                                element.metadata["TableHeading"],
+                                table_element,
+                                column_names,
+                                row,
+                                column,
+                                text,
+                                False,
+                            ),
+                        )
+
+                        # buttons
+                        save = sg.tk.Button(
+                            frame,
+                            text="\u2714",
+                            relief=sg.tk.GROOVE,
+                            command=_EditCallbackWrapper(
+                                frm,
+                                data_key,
+                                element.metadata["TableHeading"],
+                                table_element,
+                                column_names,
+                                row,
+                                column,
+                                text,
+                                True,
+                                entry,
+                            ),
+                        )
+                        discard = sg.tk.Button(
+                            frame,
+                            text="\u274E",
+                            relief=sg.tk.GROOVE,
+                            command=_EditCallbackWrapper(
+                                frm,
+                                data_key,
+                                element.metadata["TableHeading"],
+                                table_element,
+                                column_names,
+                                row,
+                                column,
+                                text,
+                                False,
+                                entry,
+                            ),
+                        )
+                        discard.pack(side="right")
+                        save.pack(side="right")
+
+                        # have entry use remaining space
+                        entry.pack(side="left", expand=True, fill="both")
+
+                        # select text and focus to begin with
+                        entry.select_range(0, sg.tk.END)
+                        entry.focus_force()
+                    else:
+                        # found a table we can edit, don't allow another double-click
+                        edit = False
+
+                        # enable browsing and sorting
+                        element.widget.configure(select=sg.TABLE_SELECT_MODE_BROWSE)
+                        element.metadata["TableHeading"]._sort_enable = True
+                        frm.edit_protect()
+
 class _EditCallbackWrapper:
 
     """Internal class used when sg.Table cells are double-clicked."""
 
-    def __init__(self, frm_reference, data_key, table_heading, table_element, column_names, row, column, text, save, entry=None):
+    def __init__(
+        self,
+        frm_reference,
+        data_key,
+        table_heading,
+        table_element,
+        column_names,
+        row,
+        column,
+        text,
+        save,
+        entry=None,
+    ):
         """
         Create a new _EditCallbackWrapper object.
 
@@ -440,66 +562,72 @@ class _EditCallbackWrapper:
         self.save = save
         self.entry = entry
 
-    def __call__(self, event = None):
+    def __call__(self, event=None):
         # create our callback (to be used below)
         global edit
-        
+
         if event is None:
             event = self.entry
-        
+
         # if a button got us here, event is actually Entry element
-        if event.__class__.__name__ == "Entry":
+        if event.__class__.__name__ in ["Entry","Combobox"]:
             widget = event
-        
+
         # otherwise, use event widget
         else:
             widget = event.widget
-            
-        # 
+
+        #
         if self.save:
             # get current entry text
-            self.text = widget.get()
-            
+            self.text = widget.get()             
+
             # get current table row
-            values = list(self.table_element.item(self.row, 'values'))
-            
+            values = list(self.table_element.item(self.row, "values"))
+
             # update cell with new text
             values[self.column] = self.text
-            
+
             # push changes to table element row
             self.table_element.item(self.row, values=values)
-            
+
             # update dataset row
             # TODO. We need to have a backup current row handy to compare.
-            #-------------------
+            # -------------------
             # get current row
             current_index = self.frm[self.data_key].current_index
             current_row = self.frm[self.data_key].get_current_row().copy()
             
+            if widget.__class__.__name__ == "Combobox":
+                self.text = 2 # cheating for the example
+
             # update cell with new text
-            current_row[self.column_names[self.column-1]] = self.text
+            current_row[self.column_names[self.column - 1]] = self.text
             # push row to dataset
             self.frm[self.data_key].rows[current_index] = current_row
             self.frm[self.data_key].save_record()
-            
+
         # destroy window
         widget.destroy()
         widget.master.destroy()
-        
+
         # enable browsing and sorting
         self.table_element.configure(select=sg.TABLE_SELECT_MODE_BROWSE)
-        self.table_heading._sort_enable = True # I can't get it re-enabled. Am I doing this wrong?
+        self.table_heading._sort_enable = True
         self.frm.edit_protect()
-        
+
         # reset edit
         edit = False
-        
+
+
 def update_table_row(table, row, values):
     table.item(row, values=values)
+
 
 window.TKroot.bind("<Double-Button-1>", callback)
 
 frm.force_save = True
+
 
 def test_set_by_pk(number):
     for i in range(number):
