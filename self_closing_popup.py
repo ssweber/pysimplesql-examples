@@ -12,11 +12,13 @@ class Popup:
 
     def info(self, title: str, msg: str, auto_close_seconds: int):
         """
-        Displays a popup window with the passed message string and auto-closes after the specified time.
+        Displays a popup window with the passed message string and auto-closes after the
+        specified time.
 
         :param title: String to display as title.
         :param msg: String to display as message. Use '\n' for newlines.
-        :param auto_close_seconds: Time in seconds after which the window will automatically close.
+        :param auto_close_seconds: Time in seconds after which the window will
+            automatically close.
         :return: None
         """
 
