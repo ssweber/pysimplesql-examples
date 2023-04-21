@@ -449,7 +449,7 @@ def callback(event):
                         elif checkbox:
                             textvariable = sg.tk.IntVar()
                             textvariable.set(text)
-                            entry = sg.tk.Checkbutton(frame, variable = textvariable, text=heading_column.capitalize())
+                            entry = sg.ttk.Checkbutton(frame, variable = textvariable)
 
                         # bind text to Return (for save), and Escape (for discard)
                         entry.bind(
