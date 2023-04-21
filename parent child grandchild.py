@@ -96,7 +96,7 @@ CREATE TABLE IF NOT EXISTS "car" (
 CREATE TABLE IF NOT EXISTS "bike" (
 	"id"	INTEGER NOT NULL,
 	"name"	TEXT NOT NULL DEFAULT 'Bike Placeholder',
-	"example"	TEXT NOT NULL DEFAULT False,
+	"example"	BOOLEAN NOT NULL DEFAULT False,
 	"person_id"	INTEGER NOT NULL,
 	FOREIGN KEY("person_id") REFERENCES "person"("id") ON UPDATE CASCADE ON DELETE CASCADE,
 	PRIMARY KEY("id" AUTOINCREMENT)
@@ -236,9 +236,9 @@ else:
 bike_layout = [
     [sg.Text("Bike - Child of Person/ Sibling of Car, default bool False")],
     selector,
-    [ss.field("bike.name"), ss.field("bike.example", sg.Checkbox)],
-    [ss.field("bike.person_id", sg.Combo)],
-    [ss.actions("bike", default=True)],
+#     [ss.field("bike.name"), ss.field("bike.example", sg.Checkbox)],
+#     [ss.field("bike.person_id", sg.Combo)],
+#     [ss.actions("bike", default=True)],
 ]
 
 # bike_repair
@@ -394,6 +394,7 @@ def callback(event):
                         and heading_column != frm[data_key].pk_column
                     ):
                         combobox = False
+                        checkbox = False
                         rels = ss.Relationship.get_relationships(frm[data_key].table)
                         for rel in rels:
                             if rel.fk_column == heading_column:
@@ -403,6 +404,9 @@ def callback(event):
                                 description = target_table.description_column
                                 combobox = True
                                 break
+                        print(frm[data_key].column_info[heading_column]['domain'])
+                        if frm[data_key].column_info[heading_column]['domain'] == 'BOOLEAN':
+                            checkbox = True
 
                         # use table_element to distinguish
                         table_element = element.Widget
@@ -419,7 +423,7 @@ def callback(event):
                         # create ttk.Entry / StringVar and place in frame
                         textvariable = sg.tk.StringVar()
                         textvariable.set(text)
-                        if not combobox:
+                        if not combobox and not checkbox:
                             entry = sg.ttk.Entry(
                                 frame, textvariable=textvariable, justify="left"
                             )
@@ -441,6 +445,11 @@ def callback(event):
                                 frame, textvariable=textvariable, justify="left"
                             )
                             entry['values'] = lst
+
+                        elif checkbox:
+                            textvariable = sg.tk.IntVar()
+                            textvariable.set(text)
+                            entry = sg.tk.Checkbutton(frame, variable = textvariable, text=heading_column.capitalize())
 
                         # bind text to Return (for save), and Escape (for discard)
                         entry.bind(
@@ -514,8 +523,9 @@ def callback(event):
                         entry.pack(side="left", expand=True, fill="both")
 
                         # select text and focus to begin with
-                        entry.select_range(0, sg.tk.END)
-                        entry.focus_force()
+                        if entry.__class__.__name__ != "Checkbutton":
+                            entry.select_range(0, sg.tk.END)
+                            entry.focus_force()
                     else:
                         # found a table we can edit, don't allow another double-click
                         edit = False
@@ -570,7 +580,7 @@ class _EditCallbackWrapper:
             event = self.entry
 
         # if a button got us here, event is actually Entry element
-        if event.__class__.__name__ in ["Entry","Combobox"]:
+        if event.__class__.__name__ in ["Entry","Combobox","Checkbutton"]:
             widget = event
 
         # otherwise, use event widget
@@ -580,7 +590,10 @@ class _EditCallbackWrapper:
         #
         if self.save:
             # get current entry text
-            self.text = widget.get()             
+            if event.__class__.__name__ != "Checkbutton":
+                self.text = widget.get()
+            else:
+                self.text = textvariable.get()
 
             # get current table row
             values = list(self.table_element.item(self.row, "values"))
@@ -627,7 +640,6 @@ def update_table_row(table, row, values):
 window.TKroot.bind("<Double-Button-1>", callback)
 
 frm.force_save = True
-
 
 def test_set_by_pk(number):
     for i in range(number):
