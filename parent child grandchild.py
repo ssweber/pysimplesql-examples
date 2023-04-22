@@ -236,9 +236,9 @@ else:
 bike_layout = [
     [sg.Text("Bike - Child of Person/ Sibling of Car, default bool False")],
     selector,
-#     [ss.field("bike.name"), ss.field("bike.example", sg.Checkbox)],
-#     [ss.field("bike.person_id", sg.Combo)],
-#     [ss.actions("bike", default=True)],
+    #     [ss.field("bike.name"), ss.field("bike.example", sg.Checkbox)],
+    #     [ss.field("bike.person_id", sg.Combo)],
+    #     [ss.actions("bike", default=True)],
 ]
 
 # bike_repair
@@ -321,7 +321,7 @@ window = sg.Window(
     "People and Vehicles",
     layout,
     finalize=True,
-    grab_anywhere=True,
+#     grab_anywhere=True,
     alpha_channel=0,
     ttk_theme=ss.themepack.ttk_theme,
 )
@@ -343,6 +343,7 @@ edit = False
 
 
 def callback(event):
+    print(event)
     global edit
     global textvariable  # needs to be global, or ttk entry garbage collects it.
 
@@ -380,19 +381,16 @@ def callback(event):
                     # found a table we can edit, don't allow another double-click
                     edit = True
 
-                    # disable browsing and sorting
-                    element.widget.configure(select=sg.TABLE_SELECT_MODE_NONE)
-                    element.metadata["TableHeading"]._sort_enable = False
-                    frm.edit_protect()
+#                     # disable browsing and sorting
+#                     element.widget.configure(select=sg.TABLE_SELECT_MODE_NONE)
+#                     element.metadata["TableHeading"]._sort_enable = False
+#                     frm.edit_protect()
 
                     # get column name
                     column_names = element.metadata["TableHeading"].columns()
                     heading_column = column_names[column - 1]
                     # get dataset_row
-                    if (
-                        column > 0
-                        and heading_column != frm[data_key].pk_column
-                    ):
+                    if column > 0 and heading_column != frm[data_key].pk_column:
                         combobox = False
                         checkbox = False
                         rels = ss.Relationship.get_relationships(frm[data_key].table)
@@ -404,8 +402,11 @@ def callback(event):
                                 description = target_table.description_column
                                 combobox = True
                                 break
-                        print(frm[data_key].column_info[heading_column]['domain'])
-                        if frm[data_key].column_info[heading_column]['domain'] == 'BOOLEAN':
+                        print(frm[data_key].column_info[heading_column]["domain"])
+                        if (
+                            frm[data_key].column_info[heading_column]["domain"]
+                            == "BOOLEAN"
+                        ):
                             checkbox = True
 
                         # use table_element to distinguish
@@ -435,7 +436,10 @@ def callback(event):
                             # Map the value to the combobox, by getting the description_column
                             # and using it to set the value
                             for r in target_table.rows:
-                                if r[target_table.pk_column] == frm[data_key][fk_column]:
+                                if (
+                                    r[target_table.pk_column]
+                                    == frm[data_key][fk_column]
+                                ):
                                     for entry in lst:
                                         if entry.get_pk() == frm[data_key][fk_column]:
                                             updated_val = entry
@@ -444,12 +448,12 @@ def callback(event):
                             entry = sg.ttk.Combobox(
                                 frame, textvariable=textvariable, justify="left"
                             )
-                            entry['values'] = lst
+                            entry["values"] = lst
 
                         elif checkbox:
                             textvariable = sg.tk.IntVar()
                             textvariable.set(text)
-                            entry = sg.ttk.Checkbutton(frame, variable = textvariable)
+                            entry = sg.ttk.Checkbutton(frame, variable=textvariable)
 
                         # bind text to Return (for save), and Escape (for discard)
                         entry.bind(
@@ -526,14 +530,20 @@ def callback(event):
                         if entry.__class__.__name__ != "Checkbutton":
                             entry.select_range(0, sg.tk.END)
                             entry.focus_force()
+                        
+                        global destroy_id
+                        destroy_id = window.TKroot.bind(
+                            "<Button-1>", _DestroyWrapper(entry, save, discard)
+                        )
                     else:
                         # found a table we can edit, don't allow another double-click
                         edit = False
 
-                        # enable browsing and sorting
-                        element.widget.configure(select=sg.TABLE_SELECT_MODE_BROWSE)
-                        element.metadata["TableHeading"]._sort_enable = True
-                        frm.edit_protect()
+#                         # enable browsing and sorting
+#                         element.widget.configure(select=sg.TABLE_SELECT_MODE_BROWSE)
+#                         element.metadata["TableHeading"]._sort_enable = True
+#                         frm.edit_protect()
+
 
 class _EditCallbackWrapper:
 
@@ -580,7 +590,7 @@ class _EditCallbackWrapper:
             event = self.entry
 
         # if a button got us here, event is actually Entry element
-        if event.__class__.__name__ in ["Entry","Combobox","Checkbutton"]:
+        if event.__class__.__name__ in ["Entry", "Combobox", "Checkbutton"]:
             widget = event
 
         # otherwise, use event widget
@@ -610,9 +620,9 @@ class _EditCallbackWrapper:
             # get current row
             current_index = self.frm[self.data_key].current_index
             current_row = self.frm[self.data_key].get_current_row().copy()
-            
+
             if widget.__class__.__name__ == "Combobox":
-                self.text = 2 # cheating for the example
+                self.text = 2  # cheating for the example
 
             # update cell with new text
             current_row[self.column_names[self.column - 1]] = self.text
@@ -624,13 +634,47 @@ class _EditCallbackWrapper:
         widget.destroy()
         widget.master.destroy()
 
-        # enable browsing and sorting
-        self.table_element.configure(select=sg.TABLE_SELECT_MODE_BROWSE)
-        self.table_heading._sort_enable = True
-        self.frm.edit_protect()
+#         # enable browsing and sorting
+#         self.table_element.configure(select=sg.TABLE_SELECT_MODE_BROWSE)
+#         self.table_heading._sort_enable = True
+#         self.frm.edit_protect()
 
         # reset edit
         edit = False
+
+
+class _DestroyWrapper:
+
+    """Internal class used when anything else other than the field, save, or discard are clicked"""
+
+    def __init__(
+        self,
+        entry,
+        save,
+        discard,
+    ):
+        """
+        Create a new _DestroyWrapper object.
+        """
+        self.entry = entry
+        self.save = save
+        self.discard = discard
+
+    def __call__(self, event):
+        # create our callback (to be used below)
+        global edit
+
+        if event.widget not in [self.entry,self.save,self.discard]:
+
+            # destroy window
+            self.entry.destroy()
+            self.save.destroy()
+            self.discard.destroy()
+            self.entry.master.destroy()
+            window.TKroot.unbind("<Button-1>", destroy_id)
+
+            # reset edit
+            edit = False
 
 
 def update_table_row(table, row, values):
@@ -640,6 +684,7 @@ def update_table_row(table, row, values):
 window.TKroot.bind("<Double-Button-1>", callback)
 
 frm.force_save = True
+
 
 def test_set_by_pk(number):
     for i in range(number):
