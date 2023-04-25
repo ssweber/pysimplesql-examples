@@ -35,7 +35,7 @@ _tabs_ = "-TABGROUP-"
 # Film
 # -------------------------
 # Define the columns for the table selector using the TableHeading convenience class.  This will also allow sorting!
-headings = ss.TableHeadings(sort_enable=True)
+headings = ss.TableHeadings(sort_enable=True, edit_enable=True)
 headings.add_column("CustomerID", "id", width=10)
 headings.add_column("CustomerName", "Company", width=30)
 headings.add_column("ContactName", "Contact", width=30)
