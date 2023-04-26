@@ -197,7 +197,7 @@ person_layout = [
 if tables:
     # Define the columns for the table selector using the TableHeading convenience class.  This will also allow sorting!
     headings = ss.TableHeadings(sort_enable=True, edit_enable=True)
-    headings.add_column("id", "id", width=10)
+    #    headings.add_column("id", "id", width=10)
     headings.add_column("name", "Name", width=10)
     headings.add_column("example", "Example", width=20)
     selector = [
@@ -321,7 +321,7 @@ window = sg.Window(
     "People and Vehicles",
     layout,
     finalize=True,
-#     grab_anywhere=True,
+    #     grab_anywhere=True,
     alpha_channel=0,
     ttk_theme=ss.themepack.ttk_theme,
 )
@@ -339,7 +339,8 @@ if foreign_keys:
 # frm.set_fk_column_cascade("bike_repair", "bike_id", update_cascade=False)
 window.SetAlpha(1)
 
-frm.force_save = True
+# frm.force_save = True
+
 
 def test_set_by_pk(number):
     for i in range(number):
