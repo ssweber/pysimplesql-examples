@@ -125,6 +125,15 @@ INSERT INTO "building" VALUES (3,'Cabin',1,1);
 {sql_grandchild_insert}
 """
 
+# INSERT INTO person (name, example) 
+# SELECT 'Person Placeholder', 0 
+# FROM (SELECT 1 UNION SELECT 2 UNION SELECT 3 UNION SELECT 4 UNION SELECT 5) a,
+#      (SELECT 1 UNION SELECT 2 UNION SELECT 3 UNION SELECT 4 UNION SELECT 5) b,
+#      (SELECT 1 UNION SELECT 2 UNION SELECT 3 UNION SELECT 4 UNION SELECT 5) c,
+#      (SELECT 1 UNION SELECT 2 UNION SELECT 3 UNION SELECT 4 UNION SELECT 5) d,
+#      (SELECT 1 UNION SELECT 2 UNION SELECT 3 UNION SELECT 4 UNION SELECT 5) e,
+#      (SELECT 1 UNION SELECT 2 UNION SELECT 3 UNION SELECT 4 UNION SELECT 5);
+
 # -------------------------
 # CREATE PYSIMPLEGUI LAYOUT
 # -------------------------
@@ -330,7 +339,8 @@ driver = ss.Sqlite(":memory:", sql_commands=sql)  # Create a new database connec
 frm = ss.Form(
     driver,
     bind_window=window,
-    prompt_save=ss.AUTOSAVE_MODE,  # save_quiet=True
+    live_update = True
+#     prompt_save=ss.AUTOSAVE_MODE,  # save_quiet=True
 )  # <=== Here is the magic!
 if foreign_keys:
     driver.con.execute("PRAGMA foreign_keys = ON")
