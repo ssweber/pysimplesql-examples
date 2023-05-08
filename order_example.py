@@ -142,17 +142,17 @@ logging.basicConfig(level=logging.DEBUG)  # <=== Set the logging level here (NOT
 # CREATE PYSIMPLEGUI LAYOUT
 # -------------------------
 # Define the columns for the table selector using the TableHeading convenience class.
-headings = ss.TableHeadings(
+order_heading = ss.TableHeadings(
     sort_enable=True, # Click a header to sort
     edit_enable=True # Double-click a cell to make edits
     )
-headings.add_column('OrderID', 'ID', width=5)
-headings.add_column('OrderDate', 'Date', width=25)
-headings.add_column('CustomerID', 'Customer', width=30)
-headings.add_column('Completed', 'Completed?', width=10)
+order_heading.add_column('OrderID', 'ID', width=5)
+order_heading.add_column('OrderDate', 'Date', width=25)
+order_heading.add_column('CustomerID', 'Customer', width=30)
+order_heading.add_column('Completed', 'Completed?', width=10)
 
-layout = [
-    [ss.selector('Orders', sg.Table, num_rows=10, headings=headings, row_height=25)],
+orders_layout = [
+    [ss.selector('Orders', sg.Table, num_rows=5, headings=order_heading, row_height=25)],
     [ss.actions('Orders')],
     [ss.field('Orders.CustomerID', sg.Combo, size=(30, 10), label='Customer')],
     [ss.field('Orders.OrderDate'),
@@ -164,7 +164,28 @@ layout = [
     [ss.field("Orders.Completed", sg.Checkbox, default=False)],
 ]
 
-win = sg.Window('Order Exapmle', layout, finalize=True)
+details_heading = ss.TableHeadings(
+    sort_enable=True, # Click a header to sort
+    edit_enable=True # Double-click a cell to make edits
+    )
+details_heading.add_column('ProductID', 'Product', width=25)
+details_heading.add_column('Quantity', 'Quantity', width=30)
+
+details_layout = [ss.selector('OrderDetails', sg.Table, num_rows=10, headings=details_heading, row_height=25)]
+
+orders_layout.append(details_layout)
+# 
+# people_layout = []
+# 
+# # The TabgGroup layout - it must contain only Tabs
+# tab_group_layout = [
+#     [
+#         sg.Tab("Orders", log_layout, key="tab-batch_log"),
+#         sg.Tab("Customers", batch_layout, key="tab-batch"),
+#     ]
+# ]
+
+win = sg.Window('Order Example', orders_layout, finalize=True)
 driver = ss.Driver.sqlite(":memory:", sql_commands=sql)
 # Here is the magic!
 frm = ss.Form(
