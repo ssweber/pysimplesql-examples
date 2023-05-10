@@ -1,34 +1,38 @@
 sql = f"""
-CREATE TABLE Customers (
-    CustomerID INTEGER PRIMARY KEY AUTOINCREMENT,
-    Name TEXT NOT NULL,
-    Email TEXT
+CREATE TABLE IF NOT EXISTS Customers (
+    "CustomerID" INTEGER NOT NULL,
+    "Name" TEXT NOT NULL,
+    "Email" TEXT,
+    PRIMARY KEY("CustomerID" AUTOINCREMENT)
 );
 
-CREATE TABLE Orders (
-    OrderID INTEGER PRIMARY KEY AUTOINCREMENT,
-    CustomerID INTEGER,
-    OrderDate INTEGER NOT NULL DEFAULT (date('now')),
-    TotalPrice REAL,
-    Completed BOOLEAN,
-    FOREIGN KEY (CustomerID) REFERENCES Customers(CustomerID)
+CREATE TABLE IF NOT EXISTS Orders (
+    "OrderID" INTEGER NOT NULL,
+    "CustomerID" INTEGER,
+    "OrderDate" INTEGER NOT NULL DEFAULT (date('now')),
+    "TotalPrice" REAL,
+    "Completed" BOOLEAN,
+    FOREIGN KEY ("CustomerID") REFERENCES Customers(CustomerID),
+	PRIMARY KEY("OrderID" AUTOINCREMENT)
 );
 
-CREATE TABLE OrderDetails (
-    OrderDetailID INTEGER PRIMARY KEY AUTOINCREMENT,
-    OrderID INTEGER,
-    ProductID INTEGER,
-    Quantity INTEGER,
-    Price REAL,
-    FOREIGN KEY (OrderID) REFERENCES Orders(OrderID) ON UPDATE CASCADE ON DELETE CASCADE,
-    FOREIGN KEY (ProductID) REFERENCES Products(ProductID)
+CREATE TABLE IF NOT EXISTS OrderDetails (
+    "OrderDetailID" INTEGER NOT NULL,
+    "OrderID" INTEGER,
+    "ProductID" INTEGER,
+    "Quantity" INTEGER,
+    "Price" REAL,
+    FOREIGN KEY ("OrderID") REFERENCES "Orders"("OrderID") ON UPDATE CASCADE ON DELETE CASCADE,
+    FOREIGN KEY ("ProductID") REFERENCES "Products"("ProductID")
+	PRIMARY KEY("OrderDetailID" AUTOINCREMENT)
 );
 
-CREATE TABLE Products (
-    ProductID INTEGER PRIMARY KEY AUTOINCREMENT,
-    Name TEXT NOT NULL DEFAULT "New Product",
-    Price REAL NOT NULL,
-    Quantity INTEGER DEFAULT 0
+CREATE TABLE IF NOT EXISTS Products (
+    "ProductID" INTEGER NOT NULL,
+    "Name" TEXT NOT NULL DEFAULT "New Product",
+    "Price" REAL NOT NULL,
+    "Quantity" INTEGER DEFAULT 0,
+    PRIMARY KEY("ProductID" AUTOINCREMENT)
 );
 
 INSERT INTO Customers (Name, Email) VALUES
@@ -129,6 +133,9 @@ custom = {
     "default_label_size": (10, 1),
     "default_element_size": (20, 1),
     "default_mline_size": (30, 7),
+    "display_checkbox_for_boolean" : True,
+    "checkbox_true" : "✔",
+    "checkbox_false" : "",
 }
 
 custom = custom | ss.tp_crystal_remix
@@ -147,21 +154,14 @@ order_heading = ss.TableHeadings(
     edit_enable=True # Double-click a cell to make edits
     )
 order_heading.add_column('OrderID', 'ID', width=5)
-order_heading.add_column('OrderDate', 'Date', width=25)
 order_heading.add_column('CustomerID', 'Customer', width=30)
-order_heading.add_column('Completed', 'Completed?', width=10)
+order_heading.add_column('OrderDate', 'Date', width=10)
+order_heading.add_column('Completed', '✔', width=8)
+
 
 orders_layout = [
-    [ss.selector('Orders', sg.Table, num_rows=5, headings=order_heading, row_height=25)],
     [ss.actions('Orders')],
-    [ss.field('Orders.CustomerID', sg.Combo, size=(30, 10), label='Customer')],
-    [ss.field('Orders.OrderDate'),
-        sg.CalendarButton(
-            "Select Date", close_when_date_chosen=True, target="Orders.OrderDate",  # <- target matches field() name
-            format="%Y-%m-%d", size=(10, 1), key='datepicker'
-        )
-    ],
-    [ss.field("Orders.Completed", sg.Checkbox, default=False)],
+    [ss.selector('Orders', sg.Table, num_rows=25, headings=order_heading, row_height=25)],
 ]
 
 details_heading = ss.TableHeadings(
@@ -169,11 +169,24 @@ details_heading = ss.TableHeadings(
     edit_enable=True # Double-click a cell to make edits
     )
 details_heading.add_column('ProductID', 'Product', width=25)
-details_heading.add_column('Quantity', 'Quantity', width=30)
+details_heading.add_column('Quantity', 'Quantity', width=10)
+details_heading.add_column('Price', 'Price/Ea', width=10)
 
-details_layout = [ss.selector('OrderDetails', sg.Table, num_rows=10, headings=details_heading, row_height=25)]
+details_layout = [
+    [sg.pin(ss.field('Orders.CustomerID', sg.Text, label='Customer:'))],
+    [ss.field('Orders.OrderDate', sg.Text),
+        sg.CalendarButton(
+            "Select Date", close_when_date_chosen=True, target="Orders.OrderDate",  # <- target matches field() name
+            format="%Y-%m-%d", size=(10, 1), key='datepicker'
+        )
+    ],
+    [ss.field("Orders.Completed", sg.Checkbox, default=False)],
+    [ss.selector('OrderDetails', sg.Table, num_rows=10, headings=details_heading, row_height=25)],
+                  [ss.actions('OrderDetails', default=False, save=True, insert=True, delete=True)]]
 
-orders_layout.append(details_layout)
+
+layout = [[sg.Col(orders_layout),sg.Col(details_layout)]]
+
 # 
 # people_layout = []
 # 
@@ -185,7 +198,7 @@ orders_layout.append(details_layout)
 #     ]
 # ]
 
-win = sg.Window('Order Example', orders_layout, finalize=True)
+win = sg.Window('Order Example', layout, finalize=True, ttk_theme="xpnative",)
 driver = ss.Driver.sqlite(":memory:", sql_commands=sql)
 # Here is the magic!
 frm = ss.Form(
