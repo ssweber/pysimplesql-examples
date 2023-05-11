@@ -9,7 +9,7 @@ CREATE TABLE IF NOT EXISTS Customers (
 CREATE TABLE IF NOT EXISTS Orders (
     "OrderID" INTEGER NOT NULL,
     "CustomerID" INTEGER,
-    "OrderDate" INTEGER NOT NULL DEFAULT (date('now')),
+    "OrderDate" DATE NOT NULL DEFAULT (date('now')),
     "TotalPrice" REAL,
     "Completed" BOOLEAN,
     FOREIGN KEY ("CustomerID") REFERENCES Customers(CustomerID),
@@ -20,7 +20,7 @@ CREATE TABLE IF NOT EXISTS Products (
     "ProductID" INTEGER NOT NULL,
     "Name" TEXT NOT NULL DEFAULT "New Product",
     "Price" REAL NOT NULL,
-    "Quantity" INTEGER DEFAULT 0,
+    "Inventory" INTEGER DEFAULT 0,
     PRIMARY KEY("ProductID" AUTOINCREMENT)
 );
 
@@ -81,7 +81,7 @@ INSERT INTO Customers (Name, Email) VALUES
     ('Yvonne Lee', 'yvonne.lee@example.com'),
     ('Zachary Perez', 'zachary.perez@example.com');
 
-INSERT INTO Products (Name, Price, Quantity) VALUES
+INSERT INTO Products (Name, Price, Inventory) VALUES
     ('Thingamabob', 5.00, 200),
     ('Doohickey', 15.00, 75),
     ('Whatchamacallit', 25.00, 50),
@@ -164,7 +164,12 @@ order_heading = ss.TableHeadings(
     edit_enable=True,  # Double-click a cell to make edits
 )
 order_heading.add_column("OrderID", "ID", width=5)
-order_heading.add_column("CustomerID", "Customer", width=30)
+order_heading.add_column(
+    column = "CustomerID",
+    heading_column = "Customer",
+    width=30,
+    readonly=False,  # set to True to disable editing for individual columns!
+)
 order_heading.add_column("OrderDate", "Date", width=10)
 order_heading.add_column("Completed", "✔", width=8)
 
@@ -190,14 +195,6 @@ details_layout = [
     [ss.field("Orders.CustomerID", sg.Text, label="Customer")],
     [
         ss.field("Orders.OrderDate", sg.Text, label="Date"),
-        sg.CalendarButton(
-            "Select Date",
-            close_when_date_chosen=True,
-            target="Orders.OrderDate",  # <- target matches field() name
-            format="%Y-%m-%d",
-            size=(10, 1),
-            key="datepicker",
-        ),
     ],
     [ss.field("Orders.Completed", sg.Checkbox, default=False)],
     [
@@ -267,10 +264,7 @@ while True:
     elif "set_current" in event and values["set_current"]["data_key"] == "OrderDetails":
         dataset = frm["OrderDetails"]
         current_row = dataset.get_current_row()
-        if (
-            dataset.row_count
-            and dataset.get_current_row()["Quantity"]
-        ):
+        if dataset.row_count and dataset.get_current_row()["Quantity"]:
             row_is_virtual = dataset.row_is_virtual()
             dataset.save_record(display_message=False)
             if not row_is_virtual:
