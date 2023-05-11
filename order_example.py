@@ -16,17 +16,6 @@ CREATE TABLE IF NOT EXISTS Orders (
 	PRIMARY KEY("OrderID" AUTOINCREMENT)
 );
 
-CREATE TABLE IF NOT EXISTS OrderDetails (
-    "OrderDetailID" INTEGER NOT NULL,
-    "OrderID" INTEGER,
-    "ProductID" INTEGER,
-    "Quantity" INTEGER,
-    "Price" REAL,
-    FOREIGN KEY ("OrderID") REFERENCES "Orders"("OrderID") ON UPDATE CASCADE ON DELETE CASCADE,
-    FOREIGN KEY ("ProductID") REFERENCES "Products"("ProductID")
-	PRIMARY KEY("OrderDetailID" AUTOINCREMENT)
-);
-
 CREATE TABLE IF NOT EXISTS Products (
     "ProductID" INTEGER NOT NULL,
     "Name" TEXT NOT NULL DEFAULT "New Product",
@@ -34,6 +23,36 @@ CREATE TABLE IF NOT EXISTS Products (
     "Quantity" INTEGER DEFAULT 0,
     PRIMARY KEY("ProductID" AUTOINCREMENT)
 );
+
+CREATE TABLE IF NOT EXISTS OrderDetails (
+    "OrderDetailID" INTEGER NOT NULL,
+    "OrderID" INTEGER,
+    "ProductID" INTEGER,
+    "Quantity" INTEGER,
+    "Price" REAL,
+    "SubTotal" REAL GENERATED ALWAYS AS ("Price" * "Quantity") STORED,
+    FOREIGN KEY ("OrderID") REFERENCES "Orders"("OrderID") ON UPDATE CASCADE ON DELETE CASCADE,
+    FOREIGN KEY ("ProductID") REFERENCES "Products"("ProductID"),
+	PRIMARY KEY("OrderDetailID" AUTOINCREMENT)
+);
+
+CREATE TRIGGER IF NOT EXISTS set_price
+AFTER INSERT ON OrderDetails
+FOR EACH ROW
+BEGIN
+    UPDATE OrderDetails
+    SET Price = (SELECT Price FROM Products WHERE Products.ProductID = NEW.ProductID)
+    WHERE OrderDetailID = NEW.OrderDetailID;
+END;
+
+CREATE TRIGGER IF NOT EXISTS set_price_update
+AFTER UPDATE ON OrderDetails
+FOR EACH ROW
+BEGIN
+    UPDATE OrderDetails
+    SET Price = (SELECT Price FROM Products WHERE Products.ProductID = NEW.ProductID)
+    WHERE OrderDetailID = NEW.OrderDetailID;
+END;
 
 INSERT INTO Customers (Name, Email) VALUES
     ('Alice Johnson', 'alice.johnson@example.com'),
@@ -93,25 +112,13 @@ SELECT CustomerID, DATE('now', '-' || (ABS(RANDOM()) % 30) || ' days'), False
 FROM Customers 
 ORDER BY RANDOM() LIMIT 100;
 
-INSERT INTO OrderDetails (OrderID, ProductID, Quantity, Price) 
-SELECT O.OrderID, P.ProductID, (ABS(RANDOM()) % 10) + 1, P.Price 
-FROM Orders O 
-JOIN (SELECT ProductID, Price FROM Products ORDER BY RANDOM() LIMIT 25) P 
+INSERT INTO OrderDetails (OrderID, ProductID, Quantity) 
+SELECT O.OrderID, P.ProductID, (ABS(RANDOM()) % 10) + 1
+FROM Orders O
+JOIN (SELECT ProductID FROM Products ORDER BY RANDOM() LIMIT 25) P 
 ON 1=1 
-ORDER BY RANDOM() LIMIT 1000;
+ORDER BY 1;
 """
-
-# To keep examples concise, avoid Black formatting. Remove # fmt: off to use Black formatting.
-# fmt: off
-
-## NOTES FROM THIS EXAMPLE
-import platform
-import ctypes
-
-# Fix Bug on Windows when using multiple screens with different scaling
-if platform.system() == "Windows":
-    ctypes.windll.shcore.SetProcessDpiAwareness(True)
-
 from pathlib import Path
 
 p = Path.cwd().parent
@@ -133,91 +140,115 @@ custom = {
     "default_label_size": (10, 1),
     "default_element_size": (20, 1),
     "default_mline_size": (30, 7),
-    "display_checkbox_for_boolean" : True,
-    "checkbox_true" : "✔",
-    "checkbox_false" : "",
+    "display_checkbox_for_boolean": True,
+    "checkbox_true": "✔",
+    "checkbox_false": "",
 }
 
 custom = custom | ss.tp_crystal_remix
 ss.themepack(custom)
 
 import logging
+
 logger = logging.getLogger(__name__)
-logging.basicConfig(level=logging.DEBUG)  # <=== Set the logging level here (NOTSET,DEBUG,INFO,WARNING,ERROR,CRITICAL)
+logging.basicConfig(
+    level=logging.DEBUG
+)  # <=== Set the logging level here (NOTSET,DEBUG,INFO,WARNING,ERROR,CRITICAL)
 
 # -------------------------
 # CREATE PYSIMPLEGUI LAYOUT
 # -------------------------
 # Define the columns for the table selector using the TableHeading convenience class.
 order_heading = ss.TableHeadings(
-    sort_enable=True, # Click a header to sort
-    edit_enable=True # Double-click a cell to make edits
-    )
-order_heading.add_column('OrderID', 'ID', width=5)
-order_heading.add_column('CustomerID', 'Customer', width=30)
-order_heading.add_column('OrderDate', 'Date', width=10)
-order_heading.add_column('Completed', '✔', width=8)
-
+    sort_enable=True,  # Click a header to sort
+    edit_enable=True,  # Double-click a cell to make edits
+)
+order_heading.add_column("OrderID", "ID", width=5)
+order_heading.add_column("CustomerID", "Customer", width=30)
+order_heading.add_column("OrderDate", "Date", width=10)
+order_heading.add_column("Completed", "✔", width=8)
 
 orders_layout = [
-    [ss.actions('Orders')],
-    [ss.selector('Orders', sg.Table, num_rows=25, headings=order_heading, row_height=25)],
+    [ss.actions("Orders")],
+    [
+        ss.selector(
+            "Orders", sg.Table, num_rows=25, headings=order_heading, row_height=25
+        )
+    ],
 ]
 
 details_heading = ss.TableHeadings(
-    sort_enable=True, # Click a header to sort
-    edit_enable=True # Double-click a cell to make edits
-    )
-details_heading.add_column('ProductID', 'Product', width=25)
-details_heading.add_column('Quantity', 'Quantity', width=10)
-details_heading.add_column('Price', 'Price/Ea', width=10)
+    sort_enable=True,  # Click a header to sort
+    edit_enable=True,  # Double-click a cell to make edits
+)
+details_heading.add_column("ProductID", "Product", width=25)
+details_heading.add_column("Quantity", "Quantity", width=10)
+details_heading.add_column("Price", "Price/Ea", width=10)
+details_heading.add_column("SubTotal", "SubTotal", width=10)
 
 details_layout = [
-    [sg.pin(ss.field('Orders.CustomerID', sg.Text, label='Customer:'))],
-    [ss.field('Orders.OrderDate', sg.Text),
+    [ss.field("Orders.CustomerID", sg.Text, label="Customer")],
+    [
+        ss.field("Orders.OrderDate", sg.Text, label="Date"),
         sg.CalendarButton(
-            "Select Date", close_when_date_chosen=True, target="Orders.OrderDate",  # <- target matches field() name
-            format="%Y-%m-%d", size=(10, 1), key='datepicker'
-        )
+            "Select Date",
+            close_when_date_chosen=True,
+            target="Orders.OrderDate",  # <- target matches field() name
+            format="%Y-%m-%d",
+            size=(10, 1),
+            key="datepicker",
+        ),
     ],
     [ss.field("Orders.Completed", sg.Checkbox, default=False)],
-    [ss.selector('OrderDetails', sg.Table, num_rows=10, headings=details_heading, row_height=25)],
-                  [ss.actions('OrderDetails', default=False, save=True, insert=True, delete=True)]]
+    [
+        ss.selector(
+            "OrderDetails",
+            sg.Table,
+            num_rows=10,
+            headings=details_heading,
+            row_height=25,
+        )
+    ],
+    [ss.actions("OrderDetails", default=False, save=True, insert=True, delete=True)],
+]
 
+menu_def = [["&File", ["&Save"]], ["&Edit", ["&Edit Products", "&Edit Customers"]]]
 
-layout = [[sg.Col(orders_layout),sg.Col(details_layout)]]
+layout = [
+    [
+        sg.Menu(
+            menu_def,
+            key="-MENUBAR-",
+            font="_ 12",
+        )
+    ],
+    [sg.Col(orders_layout), sg.Col(details_layout)],
+]
 
-# 
-# people_layout = []
-# 
-# # The TabgGroup layout - it must contain only Tabs
-# tab_group_layout = [
-#     [
-#         sg.Tab("Orders", log_layout, key="tab-batch_log"),
-#         sg.Tab("Customers", batch_layout, key="tab-batch"),
-#     ]
-# ]
-
-win = sg.Window('Order Example', layout, finalize=True, ttk_theme="xpnative",)
+win = sg.Window(
+    "Order Example",
+    layout,
+    finalize=True,
+    ttk_theme="xpnative",
+    icon=ss.themepack.icon,
+)
 driver = ss.Driver.sqlite(":memory:", sql_commands=sql)
 # Here is the magic!
 frm = ss.Form(
     driver,
     bind_window=win,
-    live_update=True # this updates the `Selector`, sg.Table as we type in fields!
-    )
+    live_update=True,  # this updates the `Selector`, sg.Table as we type in fields!
+)
 # Note:  sql_commands in only run if Journal.db does not exist!  This has the effect of creating a new blank
 # database as defined by the sql_commands if the database does not yet exist, otherwise it will use the database!
 
-# ------------------------------------------
-# How to Edit Protect your sg.CalendarButton
-# ------------------------------------------
-# By default, action() includes an edit_protect() call, that disables edits in the window.
-# You can toggle it off with:
 frm.edit_protect()  # Comment this out to edit protect elements when the window is created.
-# Set initial CalendarButton state to the same as pysimplesql elements
-win['datepicker'].update(disabled=frm.get_edit_protect())
-# Then watch for the 'edit_protect' event in your Main Loop
+# Reverse the default sort order so new journal entries appear at the top
+frm["Orders"].set_order_clause("ORDER BY OrderDate ASC")
+# Set the column order for search operations.  By default, only the designated description column is searched
+frm["Orders"].set_search_order(["CustomerID"])
+# Requery the data since we made changes to the sort order
+frm["Orders"].requery()
 
 # ---------
 # MAIN LOOP
@@ -225,13 +256,31 @@ win['datepicker'].update(disabled=frm.get_edit_protect())
 while True:
     event, values = win.read()
 
-    if event == sg.WIN_CLOSED or event == 'Exit':
+    if event == sg.WIN_CLOSED or event == "Exit":
         frm.close()  # <= ensures proper closing of the sqlite database and runs a database optimization
         win.close()
         break
-    elif ss.process_events(event, values):  # <=== let PySimpleSQL process its own events! Simple!
-        logger.info(f'PySimpleDB event handler handled the event {event}!')
-        if "edit_protect" in event:
-            win['datepicker'].update(disabled=frm.get_edit_protect())
+    elif ss.process_events(
+        event, values
+    ):  # <=== let PySimpleSQL process its own events! Simple!
+        logger.info(f"PySimpleDB event handler handled the event {event}!")
+    elif "set_current" in event and values["set_current"]["data_key"] == "OrderDetails":
+        dataset = frm["OrderDetails"]
+        current_row = dataset.get_current_row()
+        if (
+            dataset.row_count
+            and dataset.get_current_row()["Quantity"]
+        ):
+            row_is_virtual = dataset.row_is_virtual()
+            dataset.save_record(display_message=False)
+            if not row_is_virtual:
+                dataset.requery(select_first=False)
+                frm.update_elements("OrderDetails")
+    elif "Edit Products" in event:
+        frm["Products"].quick_editor()
+    elif "Edit Customers" in event:
+        frm["Customers"].quick_editor()
+    elif "Save" in event:
+        frm.save_records()
     else:
-        logger.info(f'This event ({event}) is not yet handled.')
+        logger.info(f"This event ({event}) is not yet handled.")
