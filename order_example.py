@@ -160,6 +160,7 @@ custom = {
     "default_label_size": (10, 1),
     "default_element_size": (20, 1),
     "default_mline_size": (30, 7),
+    "marker_unsaved": "💾"
 }
 
 custom = custom | ss.tp_crystal_remix
@@ -179,6 +180,7 @@ logging.basicConfig(
 order_heading = ss.TableHeadings(
     sort_enable=True,  # Click a header to sort
     edit_enable=True,  # Double-click a cell to make edits
+    save_enable=True,
 )
 order_heading.add_column("OrderID", "ID", width=5)
 order_heading.add_column(
