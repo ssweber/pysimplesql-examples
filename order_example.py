@@ -10,7 +10,7 @@ CREATE TABLE IF NOT EXISTS Orders (
     "OrderID" INTEGER NOT NULL,
     "CustomerID" INTEGER,
     "OrderDate" DATE NOT NULL DEFAULT (date('now')),
-    "TotalPrice" REAL,
+    "Total" REAL,
     "Completed" BOOLEAN,
     FOREIGN KEY ("CustomerID") REFERENCES Customers(CustomerID),
 	PRIMARY KEY("OrderID" AUTOINCREMENT)
@@ -35,6 +35,28 @@ CREATE TABLE IF NOT EXISTS OrderDetails (
     FOREIGN KEY ("ProductID") REFERENCES "Products"("ProductID"),
 	PRIMARY KEY("OrderDetailID" AUTOINCREMENT)
 );
+
+CREATE TRIGGER IF NOT EXISTS set_total
+AFTER INSERT ON OrderDetails
+FOR EACH ROW
+BEGIN
+    UPDATE Orders
+    SET Total = (
+        SELECT SUM(SubTotal) FROM OrderDetails WHERE OrderID = NEW.OrderID
+    )
+    WHERE OrderID = NEW.OrderID;
+END;
+
+CREATE TRIGGER IF NOT EXISTS update_total
+AFTER UPDATE ON OrderDetails
+FOR EACH ROW
+BEGIN
+    UPDATE Orders
+    SET Total = (
+        SELECT SUM(SubTotal) FROM OrderDetails WHERE OrderID = NEW.OrderID
+    )
+    WHERE OrderID = NEW.OrderID;
+END;
 
 CREATE TRIGGER IF NOT EXISTS set_price
 AFTER INSERT ON OrderDetails
@@ -128,8 +150,6 @@ sys.path.append(f"{str(p)}/pysimplesql/")
 import PySimpleGUI as sg  ## pysimplegui 4.60.4
 
 sg.change_look_and_feel("SystemDefaultForReal")
-# sg.change_look_and_feel("SystemDefault1")
-# sg.set_options(font=('Helvetica', 12))  # Set the font and font size for the table
 sg.set_options(font=("Roboto", 11))  # Set the font and font size for the table
 
 import pysimplesql as ss  # <=== PySimpleSQL lines will be marked like this.  There's only a few!
@@ -140,9 +160,6 @@ custom = {
     "default_label_size": (10, 1),
     "default_element_size": (20, 1),
     "default_mline_size": (30, 7),
-    "display_checkbox_for_boolean": True,
-    "checkbox_true": "✔",
-    "checkbox_false": "",
 }
 
 custom = custom | ss.tp_crystal_remix
@@ -170,7 +187,8 @@ order_heading.add_column(
     width=30,
     readonly=False,  # set to True to disable editing for individual columns!
 )
-order_heading.add_column("OrderDate", "Date", width=10)
+order_heading.add_column("OrderDate", "Date", width=20)
+order_heading.add_column("Total", "Total", width=10, readonly=True)
 order_heading.add_column("Completed", "✔", width=8)
 
 orders_layout = [
@@ -191,7 +209,9 @@ details_heading.add_column("Quantity", "Quantity", width=10)
 details_heading.add_column("Price", "Price/Ea", width=10)
 details_heading.add_column("SubTotal", "SubTotal", width=10)
 
+font = ("Roboto", 24)
 details_layout = [
+    [sg.Text('Order Details', font=font)],
     [ss.field("Orders.CustomerID", sg.Text, label="Customer")],
     [
         ss.field("Orders.OrderDate", sg.Text, label="Date"),
@@ -207,6 +227,8 @@ details_layout = [
         )
     ],
     [ss.actions("OrderDetails", default=False, save=True, insert=True, delete=True)],
+    [ss.field("OrderDetails.ProductID",sg.Combo)],
+    [ss.field("OrderDetails.Quantity")] 
 ]
 
 menu_def = [["&File", ["&Save"]], ["&Edit", ["&Edit Products", "&Edit Customers"]]]
@@ -267,6 +289,8 @@ while True:
         if dataset.row_count and dataset.get_current_row()["Quantity"]:
             row_is_virtual = dataset.row_is_virtual()
             dataset.save_record(display_message=False)
+            frm["Orders"].requery(select_first=False)
+            frm.update_selectors("Orders")
             if not row_is_virtual:
                 dataset.requery(select_first=False)
                 frm.update_elements("OrderDetails")
