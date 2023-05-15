@@ -36,6 +36,34 @@ CREATE TABLE IF NOT EXISTS OrderDetails (
 	PRIMARY KEY("OrderDetailID" AUTOINCREMENT)
 );
 
+-- Create a compound index on OrderID and ProductID columns in OrderDetails table
+CREATE INDEX idx_orderdetails_orderid_productid ON OrderDetails (OrderID, ProductID);
+
+-- Trigger to set the price value for a new OrderDetail
+CREATE TRIGGER IF NOT EXISTS set_price
+AFTER INSERT ON OrderDetails
+FOR EACH ROW
+BEGIN
+    UPDATE OrderDetails
+    SET Price = Products.Price
+    FROM Products
+    WHERE Products.ProductID = NEW.ProductID
+    AND OrderDetails.OrderDetailID = NEW.OrderDetailID;
+END;
+
+-- Trigger to update the price value for an existing OrderDetail
+CREATE TRIGGER IF NOT EXISTS set_price_update
+AFTER UPDATE ON OrderDetails
+FOR EACH ROW
+BEGIN
+    UPDATE OrderDetails
+    SET Price = Products.Price
+    FROM Products
+    WHERE Products.ProductID = NEW.ProductID
+    AND OrderDetails.OrderDetailID = NEW.OrderDetailID;
+END;
+
+-- Trigger to set the total value for a new OrderDetail
 CREATE TRIGGER IF NOT EXISTS set_total
 AFTER INSERT ON OrderDetails
 FOR EACH ROW
@@ -47,6 +75,7 @@ BEGIN
     WHERE OrderID = NEW.OrderID;
 END;
 
+-- Trigger to update the total value for an existing OrderDetail
 CREATE TRIGGER IF NOT EXISTS update_total
 AFTER UPDATE ON OrderDetails
 FOR EACH ROW
@@ -58,22 +87,25 @@ BEGIN
     WHERE OrderID = NEW.OrderID;
 END;
 
-CREATE TRIGGER IF NOT EXISTS set_price
-AFTER INSERT ON OrderDetails
+-- Trigger to update the total value for an existing OrderDetail
+CREATE TRIGGER IF NOT EXISTS delete_order_detail
+AFTER DELETE ON OrderDetails
 FOR EACH ROW
 BEGIN
-    UPDATE OrderDetails
-    SET Price = (SELECT Price FROM Products WHERE Products.ProductID = NEW.ProductID)
-    WHERE OrderDetailID = NEW.OrderDetailID;
+    UPDATE Orders
+    SET Total = (
+        SELECT SUM(SubTotal) FROM OrderDetails WHERE OrderID = OLD.OrderID
+    )
+    WHERE OrderID = OLD.OrderID;
 END;
 
-CREATE TRIGGER IF NOT EXISTS set_price_update
-AFTER UPDATE ON OrderDetails
+CREATE TRIGGER IF NOT EXISTS update_product_price
+AFTER UPDATE ON Products
 FOR EACH ROW
 BEGIN
     UPDATE OrderDetails
-    SET Price = (SELECT Price FROM Products WHERE Products.ProductID = NEW.ProductID)
-    WHERE OrderDetailID = NEW.OrderDetailID;
+    SET Price = NEW.Price
+    WHERE ProductID = NEW.ProductID;
 END;
 
 INSERT INTO Customers (Name, Email) VALUES
@@ -270,6 +302,8 @@ frm["Orders"].set_order_clause("ORDER BY OrderDate ASC")
 frm["Orders"].set_search_order(["CustomerID"])
 # Requery the data since we made changes to the sort order
 frm["Orders"].requery()
+
+win["Orders:search_input"].finalize()
 
 # ---------
 # MAIN LOOP
