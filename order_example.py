@@ -185,7 +185,7 @@ import PySimpleGUI as sg  ## pysimplegui 4.60.4
 
 sg.change_look_and_feel("SystemDefaultForReal")
 sg.set_options(font=("Roboto", 11))  # Set the font and font size for the table
-font = ("Roboto", 16) # To be used later to sg.Text headings
+font = ("Roboto", 16)  # To be used later to sg.Text headings
 
 import pysimplesql as ss
 
@@ -208,66 +208,83 @@ ss.themepack(custom)
 
 
 # Create a basic menu
-menu_def = [["&File", ["&Save"]], ["&Edit", ["&Edit Products", "&Edit Customers"]]]
+menu_def = [
+    [
+        "&File",
+        [
+            "&Save",
+            "&Requery All",
+        ],
+    ],
+    ["&Edit", ["&Edit Products", "&Edit Customers"]],
+]
 layout = [[sg.Menu(menu_def, key="-MENUBAR-", font="_ 12")]]
 
 # Define the columns for the table selector using the TableHeading convenience class.
 order_heading = ss.TableHeadings(
     sort_enable=True,  # Click a header to sort
     edit_enable=True,  # Double-click a cell to make edits
-    save_enable=True,  # Double-click 💾 in sg.Table to save row 
+    save_enable=True,  # Double-click 💾 in sg.Table to save row
 )
 
 # Add columns
 order_heading.add_column(column="OrderID", heading_column="ID", width=5)
 order_heading.add_column("CustomerID", "Customer", 30)
 order_heading.add_column("OrderDate", "Date", 20)
-order_heading.add_column("Total", "Total",
-    width=10,
-    readonly=True) # set to True to disable editing for individual columns!)
+order_heading.add_column(
+    "Total", "Total", width=10, readonly=True
+)  # set to True to disable editing for individual columns!)
 order_heading.add_column("Completed", "✔", 8)
 
 # Layout
-layout.append([
-    [sg.Text("Orders", font=font)],
+layout.append(
     [
-        ss.selector(
-            "Orders", sg.Table, num_rows=5, headings=order_heading, row_height=25
-        )
-    ],
-    [ss.actions("Orders")],
-    [sg.HorizontalSeparator()]]
+        [sg.Text("Orders", font=font)],
+        [
+            ss.selector(
+                "Orders", sg.Table, num_rows=5, headings=order_heading, row_height=25
+            )
+        ],
+        [ss.actions("Orders")],
+        [sg.HorizontalSeparator()],
+    ]
 )
 
 # OrderDetails TableHeadings:
-details_heading = ss.TableHeadings(sort_enable=True,edit_enable=True,save_enable=True)
+details_heading = ss.TableHeadings(sort_enable=True, edit_enable=True, save_enable=True)
 details_heading.add_column("ProductID", "Product", 25)
 details_heading.add_column("Quantity", "Quantity", 10)
 details_heading.add_column("Price", "Price/Ea", 10, readonly=True)
 details_heading.add_column("SubTotal", "SubTotal", 10)
 
-layout.append([
-    [sg.Text("Order Details", font=font)],
-    [ss.field("Orders.CustomerID", sg.Combo, label="Customer")],
+layout.append(
     [
-        ss.field("Orders.OrderDate", label="Date"),
-    ],
-    [ss.field("Orders.Completed", sg.Checkbox, default=False)],
-    [
-        ss.selector(
-            "OrderDetails",
-            sg.Table,
-            num_rows=10,
-            headings=details_heading,
-            row_height=25,
-        )
-    ],
-    [ss.actions("OrderDetails", default=False, save=True, insert=True, delete=True)],
-    [ss.field("OrderDetails.ProductID", sg.Combo)],
-    [ss.field("OrderDetails.Quantity")],
-    [ss.field("OrderDetails.Price", sg.Text)],
-    [ss.field("OrderDetails.SubTotal", sg.Text)],
-])
+        [sg.Text("Order Details", font=font)],
+        [ss.field("Orders.CustomerID", sg.Combo, label="Customer")],
+        [
+            ss.field("Orders.OrderDate", label="Date"),
+        ],
+        [ss.field("Orders.Completed", sg.Checkbox, default=False)],
+        [
+            ss.selector(
+                "OrderDetails",
+                sg.Table,
+                num_rows=10,
+                headings=details_heading,
+                row_height=25,
+            )
+        ],
+        [
+            ss.actions(
+                "OrderDetails", default=False, save=True, insert=True, delete=True
+            )
+        ],
+        [ss.field("OrderDetails.ProductID", sg.Combo)],
+        [ss.field("OrderDetails.Quantity")],
+        [ss.field("OrderDetails.Price", sg.Text)],
+        [ss.field("OrderDetails.SubTotal", sg.Text)],
+    ]
+)
 
 win = sg.Window(
     "Order Example",
@@ -288,7 +305,7 @@ driver = ss.Driver.sqlite(":memory:", sql_commands=sql)
 frm = ss.Form(
     driver,
     bind_window=win,
-    live_update=True, # this updates the `Selector`, sg.Table as we type in fields!
+    live_update=True,  # this updates the `Selector`, sg.Table as we type in fields!
 )
 
 frm.edit_protect()  # Comment this out to edit protect elements when the window is created.
@@ -300,7 +317,10 @@ frm["Orders"].requery()
 frm["Orders"].set_search_order(["CustomerID"])
 
 # Add a placeholder to the search input
-ss.add_placeholder_to(win["Orders:search_input"],"🔍 Search...",)
+ss.add_placeholder_to(
+    win["Orders:search_input"],
+    "🔍 Search...",
+)
 
 # ---------
 # MAIN LOOP
@@ -312,7 +332,7 @@ while True:
         win.close()
         break
     # <=== let PySimpleSQL process its own events! Simple!
-    elif ss.process_events(event, values):  
+    elif ss.process_events(event, values):
         logger.info(f"PySimpleDB event handler handled the event {event}!")
     # Code to automatically save and refresh OrderDetails:
     if "set_current" in event and values["set_current"]["data_key"] == "OrderDetails":
@@ -335,3 +355,6 @@ while True:
     # call a Form-level save
     elif "Save" in event:
         frm.save_records()
+    # call a Form-level requery
+    elif "Requery All" in event:
+        frm.requery_all()
