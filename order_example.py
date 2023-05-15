@@ -8,10 +8,10 @@ CREATE TABLE IF NOT EXISTS Customers (
 
 CREATE TABLE IF NOT EXISTS Orders (
     "OrderID" INTEGER NOT NULL,
-    "CustomerID" INTEGER,
+    "CustomerID" INTEGER NOT NULL,
     "OrderDate" DATE NOT NULL DEFAULT (date('now')),
     "Total" REAL,
-    "Completed" BOOLEAN,
+    "Completed" BOOLEAN NOT NULL,
     FOREIGN KEY ("CustomerID") REFERENCES Customers(CustomerID),
 	PRIMARY KEY("OrderID" AUTOINCREMENT)
 );
@@ -27,7 +27,7 @@ CREATE TABLE IF NOT EXISTS Products (
 CREATE TABLE IF NOT EXISTS OrderDetails (
     "OrderDetailID" INTEGER NOT NULL,
     "OrderID" INTEGER,
-    "ProductID" INTEGER,
+    "ProductID" INTEGER NOT NULL,
     "Quantity" INTEGER,
     "Price" REAL,
     "SubTotal" REAL GENERATED ALWAYS AS ("Price" * "Quantity") STORED,
@@ -189,7 +189,7 @@ import pysimplesql as ss  # <=== PySimpleSQL lines will be marked like this.  Th
 
 custom = {
     "ttk_theme": "xpnative",
-    "default_label_size": (10, 1),
+    "default_label_size": (15, 1),
     "default_element_size": (20, 1),
     "default_mline_size": (30, 7),
     "marker_unsaved": "💾",
@@ -224,14 +224,16 @@ order_heading.add_column(
 order_heading.add_column("OrderDate", "Date", width=20)
 order_heading.add_column("Total", "Total", width=10, readonly=True)
 order_heading.add_column("Completed", "✔", width=8)
-
+font = ("Roboto", 16)
 orders_layout = [
+    [sg.Text("Orders", font=font)],
     [ss.actions("Orders")],
     [
         ss.selector(
-            "Orders", sg.Table, num_rows=25, headings=order_heading, row_height=25
+            "Orders", sg.Table, num_rows=5, headings=order_heading, row_height=25
         )
     ],
+    [sg.HorizontalSeparator()]
 ]
 
 details_heading = ss.TableHeadings(
@@ -243,10 +245,9 @@ details_heading.add_column("Quantity", "Quantity", width=10)
 details_heading.add_column("Price", "Price/Ea", width=10)
 details_heading.add_column("SubTotal", "SubTotal", width=10)
 
-font = ("Roboto", 24)
 details_layout = [
     [sg.Text("Order Details", font=font)],
-    [ss.field("Orders.CustomerID", sg.Text, label="Customer")],
+    [ss.field("Orders.CustomerID", sg.Combo, label="Customer")],
     [
         ss.field("Orders.OrderDate", sg.Text, label="Date"),
     ],
@@ -262,10 +263,12 @@ details_layout = [
     ],
     [ss.actions("OrderDetails", default=False, save=True, insert=True, delete=True)],
     [ss.field("OrderDetails.ProductID", sg.Combo)],
-    [ss.field("OrderDetails.Quantity", sg.Multiline)],
+    [ss.field("OrderDetails.Quantity")],
 ]
 
 menu_def = [["&File", ["&Save"]], ["&Edit", ["&Edit Products", "&Edit Customers"]]]
+
+orders_layout.append(details_layout)
 
 layout = [
     [
@@ -275,7 +278,7 @@ layout = [
             font="_ 12",
         )
     ],
-    [sg.Col(orders_layout), sg.Col(details_layout)],
+    [orders_layout],
 ]
 
 win = sg.Window(
@@ -285,6 +288,11 @@ win = sg.Window(
     ttk_theme="xpnative",
     icon=ss.themepack.icon,
 )
+win["Orders:selector"].expand(True, True)
+win["Orders:selector"].table_frame.pack(expand=True, fill="both")
+win["OrderDetails:selector"].expand(True, True)
+win["OrderDetails:selector"].table_frame.pack(expand=True, fill="both")
+
 driver = ss.Driver.sqlite(":memory:", sql_commands=sql)
 # Here is the magic!
 frm = ss.Form(
@@ -303,26 +311,21 @@ frm["Orders"].set_search_order(["CustomerID"])
 # Requery the data since we made changes to the sort order
 frm["Orders"].requery()
 
-ss.add_placeholder_to(
-    win["Orders:search_input"],
-    "🔍 Search...",
-)
+ss.add_placeholder_to(win["Orders:search_input"],"🔍 Search...",)
 
 # ---------
 # MAIN LOOP
 # ---------
 while True:
     event, values = win.read()
-
     if event == sg.WIN_CLOSED or event == "Exit":
         frm.close()  # <= ensures proper closing of the sqlite database and runs a database optimization
         win.close()
         break
-    elif ss.process_events(
-        event, values
-    ):  # <=== let PySimpleSQL process its own events! Simple!
+    # <=== let PySimpleSQL process its own events! Simple!
+    elif ss.process_events(event, values):  
         logger.info(f"PySimpleDB event handler handled the event {event}!")
-    elif "set_current" in event and values["set_current"]["data_key"] == "OrderDetails":
+    if "set_current" in event and values["set_current"]["data_key"] == "OrderDetails":
         dataset = frm["OrderDetails"]
         current_row = dataset.get_current_row()
         if dataset.row_count and dataset.get_current_row()["Quantity"]:
@@ -339,5 +342,3 @@ while True:
         frm["Customers"].quick_editor()
     elif "Save" in event:
         frm.save_records()
-    else:
-        logger.info(f"This event ({event}) is not yet handled.")
