@@ -109,31 +109,32 @@ BEGIN
 END;
 
 INSERT INTO Customers (Name, Email) VALUES
-    ('Alice Johnson', 'alice.johnson@example.com'),
-    ('Bob Williams', 'bob.williams@example.com'),
-    ('Charlie Brown', 'charlie.brown@example.com'),
-    ('David Lee', 'david.lee@example.com'),
-    ('Emily Davis', 'emily.davis@example.com'),
-    ('Frank Smith', 'frank.smith@example.com'),
-    ('Gina Rodriguez', 'gina.rodriguez@example.com'),
-    ('Henry Lee', 'henry.lee@example.com'),
-    ('Isabella Martinez', 'isabella.martinez@example.com'),
-    ('Jacob Green', 'jacob.green@example.com'),
-    ('Karen Wilson', 'karen.wilson@example.com'),
-    ('Larry White', 'larry.white@example.com'),
-    ('Maria Perez', 'maria.perez@example.com'),
-    ('Nancy Thompson', 'nancy.thompson@example.com'),
-    ('Oliver Davis', 'oliver.davis@example.com'),
-    ('Paul Kim', 'paul.kim@example.com'),
-    ('Rachel Lee', 'rachel.lee@example.com'),
-    ('Sarah Jones', 'sarah.jones@example.com'),
-    ('Thomas Brown', 'thomas.brown@example.com'),
-    ('Ursula Rodriguez', 'ursula.rodriguez@example.com'),
-    ('Victor Garcia', 'victor.garcia@example.com'),
-    ('William Johnson', 'william.johnson@example.com'),
-    ('Xavier Hernandez', 'xavier.hernandez@example.com'),
-    ('Yvonne Lee', 'yvonne.lee@example.com'),
-    ('Zachary Perez', 'zachary.perez@example.com');
+    ('Alice Rodriguez', 'alice.rodriguez@example.com'),
+    ('Bryan Patel', 'bryan.patel@example.com'),
+    ('Cassandra Kim', 'cassandra.kim@example.com'),
+    ('David Nguyen', 'david.nguyen@example.com'),
+    ('Ella Singh', 'ella.singh@example.com'),
+    ('Franklin Gomez', 'franklin.gomez@example.com'),
+    ('Gabriela Ortiz', 'gabriela.ortiz@example.com'),
+    ('Henry Chen', 'henry.chen@example.com'),
+    ('Isabella Kumar', 'isabella.kumar@example.com'),
+    ('Jonathan Lee', 'jonathan.lee@example.com'),
+    ('Katherine Wright', 'katherine.wright@example.com'),
+    ('Liam Davis', 'liam.davis@example.com'),
+    ('Mia Ali', 'mia.ali@example.com'),
+    ('Nathan Kim', 'nathan.kim@example.com'),
+    ('Oliver Brown', 'oliver.brown@example.com'),
+    ('Penelope Martinez', 'penelope.martinez@example.com'),
+    ('Quentin Carter', 'quentin.carter@example.com'),
+    ('Rosa Hernandez', 'rosa.hernandez@example.com'),
+    ('Samantha Jones', 'samantha.jones@example.com'),
+    ('Thomas Smith', 'thomas.smith@example.com'),
+    ('Uma Garcia', 'uma.garcia@example.com'),
+    ('Valentina Lopez', 'valentina.lopez@example.com'),
+    ('William Park', 'william.park@example.com'),
+    ('Xander Williams', 'xander.williams@example.com'),
+    ('Yara Hassan', 'yara.hassan@example.com'),
+    ('Zoe Perez', 'zoe.perez@example.com');
 
 INSERT INTO Products (Name, Price, Inventory) VALUES
     ('Thingamabob', 5.00, 200),
@@ -227,12 +228,12 @@ order_heading.add_column("Completed", "✔", width=8)
 font = ("Roboto", 16)
 orders_layout = [
     [sg.Text("Orders", font=font)],
-    [ss.actions("Orders")],
     [
         ss.selector(
             "Orders", sg.Table, num_rows=5, headings=order_heading, row_height=25
         )
     ],
+    [ss.actions("Orders")],
     [sg.HorizontalSeparator()]
 ]
 
@@ -249,7 +250,7 @@ details_layout = [
     [sg.Text("Order Details", font=font)],
     [ss.field("Orders.CustomerID", sg.Combo, label="Customer")],
     [
-        ss.field("Orders.OrderDate", sg.Text, label="Date"),
+        ss.field("Orders.OrderDate", label="Date"),
     ],
     [ss.field("Orders.Completed", sg.Checkbox, default=False)],
     [
@@ -264,6 +265,8 @@ details_layout = [
     [ss.actions("OrderDetails", default=False, save=True, insert=True, delete=True)],
     [ss.field("OrderDetails.ProductID", sg.Combo)],
     [ss.field("OrderDetails.Quantity")],
+    [ss.field("OrderDetails.Price", sg.Text)],
+    [ss.field("OrderDetails.SubTotal", sg.Text)],
 ]
 
 menu_def = [["&File", ["&Save"]], ["&Edit", ["&Edit Products", "&Edit Customers"]]]
