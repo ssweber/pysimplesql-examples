@@ -192,7 +192,7 @@ custom = {
     "default_label_size": (10, 1),
     "default_element_size": (20, 1),
     "default_mline_size": (30, 7),
-    "marker_unsaved": "💾"
+    "marker_unsaved": "💾",
 }
 
 custom = custom | ss.tp_crystal_remix
@@ -216,8 +216,8 @@ order_heading = ss.TableHeadings(
 )
 order_heading.add_column("OrderID", "ID", width=5)
 order_heading.add_column(
-    column = "CustomerID",
-    heading_column = "Customer",
+    column="CustomerID",
+    heading_column="Customer",
     width=30,
     readonly=False,  # set to True to disable editing for individual columns!
 )
@@ -245,7 +245,7 @@ details_heading.add_column("SubTotal", "SubTotal", width=10)
 
 font = ("Roboto", 24)
 details_layout = [
-    [sg.Text('Order Details', font=font)],
+    [sg.Text("Order Details", font=font)],
     [ss.field("Orders.CustomerID", sg.Text, label="Customer")],
     [
         ss.field("Orders.OrderDate", sg.Text, label="Date"),
@@ -261,8 +261,8 @@ details_layout = [
         )
     ],
     [ss.actions("OrderDetails", default=False, save=True, insert=True, delete=True)],
-    [ss.field("OrderDetails.ProductID",sg.Combo)],
-    [ss.field("OrderDetails.Quantity")] 
+    [ss.field("OrderDetails.ProductID", sg.Combo)],
+    [ss.field("OrderDetails.Quantity", sg.Multiline)],
 ]
 
 menu_def = [["&File", ["&Save"]], ["&Edit", ["&Edit Products", "&Edit Customers"]]]
@@ -303,7 +303,10 @@ frm["Orders"].set_search_order(["CustomerID"])
 # Requery the data since we made changes to the sort order
 frm["Orders"].requery()
 
-win["Orders:search_input"].finalize()
+ss.add_placeholder_to(
+    win["Orders:search_input"],
+    "🔍 Search...",
+)
 
 # ---------
 # MAIN LOOP
