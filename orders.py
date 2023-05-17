@@ -1,4 +1,45 @@
-sql = f"""
+# not needed for pysimplesql
+# Fix fizziness on Windows
+import platform
+import ctypes
+if platform.system() == "Windows":
+    ctypes.windll.shcore.SetProcessDpiAwareness(True)
+    
+import pathlib
+import sys
+p = pathlib.Path.cwd().parent
+sys.path.append(f"{str(p)}/pysimplesql/")
+
+import PySimpleGUI as sg  ## pysimplegui 4.60.4
+
+import logging
+
+import PySimpleGUI as sg
+import pysimplesql as ss
+
+# custom code in the PySimpleGUI 'Main Loop' that saves when adding a new row
+# to OrderDetails.
+automatically_save_orderdetails = True
+
+sg.change_look_and_feel("SystemDefaultForReal")
+sg.set_options(font=("Roboto", 11))  # Set the font and font size for the table
+font = ("Roboto", 16)  # To be used later to sg.Text headings
+
+logger = logging.getLogger(__name__)
+logging.basicConfig(level=logging.DEBUG)
+
+custom = {
+    "ttk_theme": "xpnative",
+    "default_label_size": (15, 1),
+    "default_element_size": (20, 1),
+    "default_mline_size": (30, 7),
+    #     "marker_unsaved": "✔",
+}
+custom = custom | ss.tp_crystal_remix
+ss.themepack(custom)
+
+
+sql = """
 CREATE TABLE IF NOT EXISTS Customers (
     "CustomerID" INTEGER NOT NULL,
     "Name" TEXT NOT NULL,
@@ -161,46 +202,19 @@ INSERT INTO Products (Name, Price, Inventory) VALUES
     ('Whammy', 26.50, 30),
     ('Thingy', 7.00, 130),
     ('Doodadery', 17.00, 70);
-    
-INSERT INTO Orders (CustomerID, OrderDate, Completed) 
+
+INSERT INTO Orders (CustomerID, OrderDate, Completed)
 SELECT CustomerID, DATE('now', '-' || (ABS(RANDOM()) % 30) || ' days'), False
-FROM Customers 
+FROM Customers
 ORDER BY RANDOM() LIMIT 100;
 
-INSERT INTO OrderDetails (OrderID, ProductID, Quantity) 
+INSERT INTO OrderDetails (OrderID, ProductID, Quantity)
 SELECT O.OrderID, P.ProductID, (ABS(RANDOM()) % 10) + 1
 FROM Orders O
-JOIN (SELECT ProductID FROM Products ORDER BY RANDOM() LIMIT 25) P 
-ON 1=1 
+JOIN (SELECT ProductID FROM Products ORDER BY RANDOM() LIMIT 25) P
+ON 1=1
 ORDER BY 1;
 """
-from pathlib import Path
-
-p = Path.cwd().parent
-import sys
-
-sys.path.append(f"{str(p)}/pysimplesql/")
-import logging
-import PySimpleGUI as sg  ## pysimplegui 4.60.4
-
-sg.change_look_and_feel("SystemDefaultForReal")
-sg.set_options(font=("Roboto", 11))  # Set the font and font size for the table
-font = ("Roboto", 16)  # To be used later to sg.Text headings
-
-import pysimplesql as ss
-
-logger = logging.getLogger(__name__)
-logging.basicConfig(level=logging.INFO)
-
-custom = {
-    "ttk_theme": "xpnative",
-    "default_label_size": (15, 1),
-    "default_element_size": (20, 1),
-    "default_mline_size": (30, 7),
-    "marker_unsaved": "💾",
-}
-custom = custom | ss.tp_crystal_remix
-ss.themepack(custom)
 
 # -------------------------
 # CREATE PYSIMPLEGUI LAYOUT
@@ -242,7 +256,11 @@ layout.append(
         [sg.Text("Orders", font=font)],
         [
             ss.selector(
-                "Orders", sg.Table, num_rows=5, headings=order_heading, row_height=25
+                "Orders",
+                sg.Table,
+                num_rows=5,
+                headings=order_heading,
+                row_height=25,
             )
         ],
         [ss.actions("Orders")],
@@ -252,7 +270,7 @@ layout.append(
 
 # OrderDetails TableHeadings:
 details_heading = ss.TableHeadings(sort_enable=True, edit_enable=True, save_enable=True)
-details_heading.add_column("ProductID", "Product", 25)
+details_heading.add_column("ProductID", "Product", 30)
 details_heading.add_column("Quantity", "Quantity", 10)
 details_heading.add_column("Price", "Price/Ea", 10, readonly=True)
 details_heading.add_column("SubTotal", "SubTotal", 10)
@@ -308,7 +326,7 @@ frm = ss.Form(
     live_update=True,  # this updates the `Selector`, sg.Table as we type in fields!
 )
 
-frm.edit_protect()  # Comment this out to edit protect elements when the window is created.
+frm.edit_protect()  # Comment this out to edit protect when the window is created.
 # Reverse the default sort order so Orders are sorted by date
 frm["Orders"].set_order_clause("ORDER BY OrderDate ASC")
 # Requery the data since we made changes to the sort order
@@ -335,7 +353,11 @@ while True:
     elif ss.process_events(event, values):
         logger.info(f"PySimpleDB event handler handled the event {event}!")
     # Code to automatically save and refresh OrderDetails:
-    if "set_current" in event and values["set_current"]["data_key"] == "OrderDetails":
+    elif (
+        "current_row_updated" in event
+        and values["current_row_updated"]["data_key"] == "OrderDetails"
+        and automatically_save_orderdetails
+    ):
         dataset = frm["OrderDetails"]
         current_row = dataset.get_current_row()
         # after a product and quantity is entered, save and requery
@@ -354,7 +376,12 @@ while True:
         frm["Customers"].quick_editor()
     # call a Form-level save
     elif "Save" in event:
-        frm.save_records()
+        #         frm.save_records()
+        frm.set_live_update(False)
     # call a Form-level requery
     elif "Requery All" in event:
-        frm.requery_all()
+        #         frm.requery_all()
+        frm.set_live_update(True)
+    else:
+        pass
+
