@@ -370,10 +370,10 @@ while True:
         frm["Customers"].quick_editor()
     # call a Form-level save
     elif "Save" in event:
-    frm.save_records()
+        frm.save_records()
     # call a Form-level requery
     elif "Requery All" in event:
-    frm.requery_all()
+        frm.requery_all()
     else:
         pass
 
