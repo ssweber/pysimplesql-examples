@@ -1,5 +1,10 @@
 import logging
 
+import pathlib
+import sys
+p = pathlib.Path.cwd().parent
+sys.path.append(f"{str(p)}/pysimplesql/")
+
 import PySimpleGUI as sg
 import pysimplesql as ss
 
@@ -289,6 +294,7 @@ details_heading.add_column("Price", "Price/Ea", 10, readonly=True)
 details_heading.add_column("SubTotal", "SubTotal", 10)
 
 orderdetails_layout = [
+    [sg.Sizer(h_pixels=0, v_pixels=10)],
     [ss.field("Orders.CustomerID", sg.Combo, label="Customer")],
     [
         ss.field("Orders.OrderDate", label="Date"),
@@ -308,6 +314,7 @@ orderdetails_layout = [
     [ss.field("OrderDetails.Quantity")],
     [ss.field("OrderDetails.Price", sg.Text)],
     [ss.field("OrderDetails.SubTotal", sg.Text)],
+    [sg.Sizer(h_pixels=0, v_pixels=10)],
 ]
 
 layout.append([sg.Frame("Order Details", orderdetails_layout, expand_x=True)])
