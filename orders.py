@@ -69,7 +69,7 @@ CREATE TABLE IF NOT EXISTS OrderDetails (
     "OrderDetailID" INTEGER NOT NULL,
     "OrderID" INTEGER,
     "ProductID" INTEGER NOT NULL,
-    "Quantity" INTEGER,
+    "Quantity" INTEGER NOT NULL,
     "Price" REAL,
     "SubTotal" REAL GENERATED ALWAYS AS ("Price" * "Quantity") STORED,
     FOREIGN KEY ("OrderID") REFERENCES "Orders"("OrderID") ON UPDATE CASCADE ON DELETE CASCADE,
@@ -334,12 +334,6 @@ frm["Orders"].requery()
 # Set the column order for search operations.
 frm["Orders"].set_search_order(["CustomerID"])
 
-# Add a placeholder to the search input
-ss.add_placeholder_to(
-    win["Orders:search_input"],
-    "🔍 Search...",
-)
-
 # ---------
 # MAIN LOOP
 # ---------
@@ -376,12 +370,10 @@ while True:
         frm["Customers"].quick_editor()
     # call a Form-level save
     elif "Save" in event:
-        #         frm.save_records()
-        frm.set_live_update(False)
+    frm.save_records()
     # call a Form-level requery
     elif "Requery All" in event:
-        #         frm.requery_all()
-        frm.set_live_update(True)
+    frm.requery_all()
     else:
         pass
 
