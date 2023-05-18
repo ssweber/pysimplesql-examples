@@ -1,43 +1,30 @@
-# not needed for pysimplesql
-# Fix fizziness on Windows
-import platform
-import ctypes
-if platform.system() == "Windows":
-    ctypes.windll.shcore.SetProcessDpiAwareness(True)
-    
-import pathlib
-import sys
-p = pathlib.Path.cwd().parent
-sys.path.append(f"{str(p)}/pysimplesql/")
-
-import PySimpleGUI as sg  ## pysimplegui 4.60.4
-
 import logging
 
 import PySimpleGUI as sg
 import pysimplesql as ss
 
-# custom code in the PySimpleGUI 'Main Loop' that saves when adding a new row
-# to OrderDetails.
-automatically_save_orderdetails = True
-
+# PySimpleGUI options
+# -----------------------------
 sg.change_look_and_feel("SystemDefaultForReal")
-sg.set_options(font=("Roboto", 11))  # Set the font and font size for the table
-font = ("Roboto", 16)  # To be used later to sg.Text headings
+sg.set_options(font=("Arial", 11), dpi_awareness=True)
 
+# Setup Logger
+# -----------------------------
 logger = logging.getLogger(__name__)
-logging.basicConfig(level=logging.DEBUG)
+logging.basicConfig(level=logging.INFO)
 
+# Use the `xpnative` ttk_theme, and the `crystal_remix` iconset
+# -----------------------------
 custom = {
     "ttk_theme": "xpnative",
-    "default_label_size": (15, 1),
-    "default_element_size": (20, 1),
-    "default_mline_size": (30, 7),
-    #     "marker_unsaved": "✔",
 }
 custom = custom | ss.tp_crystal_remix
 ss.themepack(custom)
 
+# SQL Statement
+# ======================================================================================
+# While this example uses triggers to calculate prices and sub/totals, they are not
+# required for pysimplesql to operate. See simpler examples, like journal.
 
 sql = """
 CREATE TABLE IF NOT EXISTS Customers (
@@ -54,7 +41,7 @@ CREATE TABLE IF NOT EXISTS Orders (
     "Total" REAL,
     "Completed" BOOLEAN NOT NULL,
     FOREIGN KEY ("CustomerID") REFERENCES Customers(CustomerID),
-	PRIMARY KEY("OrderID" AUTOINCREMENT)
+    PRIMARY KEY("OrderID" AUTOINCREMENT)
 );
 
 CREATE TABLE IF NOT EXISTS Products (
@@ -69,12 +56,12 @@ CREATE TABLE IF NOT EXISTS OrderDetails (
     "OrderDetailID" INTEGER NOT NULL,
     "OrderID" INTEGER,
     "ProductID" INTEGER NOT NULL,
-    "Quantity" INTEGER NOT NULL,
+    "Quantity" INTEGER,
     "Price" REAL,
     "SubTotal" REAL GENERATED ALWAYS AS ("Price" * "Quantity") STORED,
     FOREIGN KEY ("OrderID") REFERENCES "Orders"("OrderID") ON UPDATE CASCADE ON DELETE CASCADE,
     FOREIGN KEY ("ProductID") REFERENCES "Products"("ProductID"),
-	PRIMARY KEY("OrderDetailID" AUTOINCREMENT)
+    PRIMARY KEY("OrderDetailID" AUTOINCREMENT)
 );
 
 -- Create a compound index on OrderID and ProductID columns in OrderDetails table
@@ -249,25 +236,22 @@ DROP TABLE temp;
 # CREATE PYSIMPLEGUI LAYOUT
 # -------------------------
 
-
+# fmt: off
 # Create a basic menu
 menu_def = [
-    [
-        "&File",
-        [
-            "&Save",
-            "&Requery All",
-        ],
-    ],
+    ["&File",["&Save","&Requery All",],],
     ["&Edit", ["&Edit Products", "&Edit Customers"]],
 ]
+# fmt: on
 layout = [[sg.Menu(menu_def, key="-MENUBAR-", font="_ 12")]]
 
-# Define the columns for the table selector using the TableHeading convenience class.
+# Define the columns for the table selector using the TableHeading class.
 order_heading = ss.TableHeadings(
-    sort_enable=True,  # Click a header to sort
-    edit_enable=True,  # Double-click a cell to make edits
-    save_enable=True,  # Double-click 💾 in sg.Table to save row
+    sort_enable=True,  # Click a heading to sort
+    edit_enable=True,  # Double-click a cell to make edits.
+    # Click 💾 in sg.Table Heading to trigger DataSet.save_record()
+    # Exempted: Primary Key columns, Generated columns, and columns set as readonly
+    save_enable=True,
 )
 
 # Add columns
@@ -282,7 +266,7 @@ order_heading.add_column("Completed", "✔", 8)
 # Layout
 layout.append(
     [
-        [sg.Text("Orders", font=font)],
+        [sg.Text("Orders", font="_16")],
         [
             ss.selector(
                 "Orders",
@@ -293,7 +277,7 @@ layout.append(
             )
         ],
         [ss.actions("Orders")],
-        [sg.HorizontalSeparator()],
+        [sg.Sizer(h_pixels=0, v_pixels=20)],
     ]
 )
 
@@ -304,39 +288,36 @@ details_heading.add_column("Quantity", "Quantity", 10)
 details_heading.add_column("Price", "Price/Ea", 10, readonly=True)
 details_heading.add_column("SubTotal", "SubTotal", 10)
 
-layout.append(
+orderdetails_layout = [
+    [ss.field("Orders.CustomerID", sg.Combo, label="Customer")],
     [
-        [sg.Text("Order Details", font=font)],
-        [ss.field("Orders.CustomerID", sg.Combo, label="Customer")],
-        [
-            ss.field("Orders.OrderDate", label="Date"),
-        ],
-        [ss.field("Orders.Completed", sg.Checkbox, default=False)],
-        [
-            ss.selector(
-                "OrderDetails",
-                sg.Table,
-                num_rows=10,
-                headings=details_heading,
-                row_height=25,
-            )
-        ],
-        [
-            ss.actions(
-                "OrderDetails", default=False, save=True, insert=True, delete=True
-            )
-        ],
-        [ss.field("OrderDetails.ProductID", sg.Combo)],
-        [ss.field("OrderDetails.Quantity")],
-        [ss.field("OrderDetails.Price", sg.Text)],
-        [ss.field("OrderDetails.SubTotal", sg.Text)],
-    ]
-)
+        ss.field("Orders.OrderDate", label="Date"),
+    ],
+    [ss.field("Orders.Completed", sg.Checkbox, default=False)],
+    [
+        ss.selector(
+            "OrderDetails",
+            sg.Table,
+            num_rows=10,
+            headings=details_heading,
+            row_height=25,
+        )
+    ],
+    [ss.actions("OrderDetails", default=False, save=True, insert=True, delete=True)],
+    [ss.field("OrderDetails.ProductID", sg.Combo)],
+    [ss.field("OrderDetails.Quantity")],
+    [ss.field("OrderDetails.Price", sg.Text)],
+    [ss.field("OrderDetails.SubTotal", sg.Text)],
+]
+
+layout.append([sg.Frame("Order Details", orderdetails_layout, expand_x=True)])
 
 win = sg.Window(
     "Order Example",
     layout,
     finalize=True,
+    # Below is Important! pysimplesql progressbars/popups/quick_editors use
+    # ttk_theme and icon as defined in themepack.
     ttk_theme="xpnative",
     icon=ss.themepack.icon,
 )
@@ -347,13 +328,19 @@ win["Orders:selector"].table_frame.pack(expand=True, fill="both")
 win["OrderDetails:selector"].expand(True, True)
 win["OrderDetails:selector"].table_frame.pack(expand=True, fill="both")
 
+# Init pysimplesql Driver and Form
+# --------------------------------
+
 # Create sqlite driver, keeping the database in memory
 driver = ss.Driver.sqlite(":memory:", sql_commands=sql)
 frm = ss.Form(
     driver,
     bind_window=win,
-    live_update=True,  # this updates the `Selector`, sg.Table as we type in fields!
+    live_update=True,  # this updates the `Selector`, sg.Table as we type in fields.
 )
+
+# Few more settings
+# -----------------
 
 frm.edit_protect()  # Comment this out to edit protect when the window is created.
 # Reverse the default sort order so Orders are sorted by date
@@ -375,11 +362,12 @@ while True:
     # <=== let PySimpleSQL process its own events! Simple!
     elif ss.process_events(event, values):
         logger.info(f"PySimpleDB event handler handled the event {event}!")
+
     # Code to automatically save and refresh OrderDetails:
+    # ----------------------------------------------------
     elif (
         "current_row_updated" in event
         and values["current_row_updated"]["data_key"] == "OrderDetails"
-        and automatically_save_orderdetails
     ):
         dataset = frm["OrderDetails"]
         current_row = dataset.get_current_row()
@@ -389,10 +377,13 @@ while True:
             dataset.save_record(display_message=False)
             frm["Orders"].requery(select_first=False)
             frm.update_selectors("Orders")
+            # will need to requery if updating, rather than inserting a new record
             if not row_is_virtual:
                 dataset.requery(select_first=False)
                 frm.update_elements("OrderDetails")
-    # logic to display the quick_editor for products and customers
+    # ----------------------------------------------------
+
+    # Display the quick_editor for products and customers
     elif "Edit Products" in event:
         frm["Products"].quick_editor()
     elif "Edit Customers" in event:
@@ -404,5 +395,4 @@ while True:
     elif "Requery All" in event:
         frm.requery_all()
     else:
-        pass
-
+        logger.info(f"This event ({event}) is not yet handled.")
