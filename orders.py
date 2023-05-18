@@ -216,6 +216,35 @@ ON 1=1
 ORDER BY 1;
 """
 
+"""
+-- Create a temporary table with a single column
+CREATE TEMPORARY TABLE temp(CustomerID INTEGER);
+
+-- Insert 100 random CustomerIDs into the temporary table
+INSERT INTO temp(CustomerID)
+SELECT CustomerID
+FROM Customers
+ORDER BY RANDOM()
+LIMIT 100;
+
+-- Insert 10,000 records into the Orders table using the temporary table and recursive CTE
+WITH RECURSIVE cte AS (
+  SELECT 1 AS counter
+  UNION ALL
+  SELECT counter + 1
+  FROM cte
+  WHERE counter < 100
+)
+INSERT INTO Orders (CustomerID, OrderDate, Completed)
+SELECT temp.CustomerID, DATE('now', '-' || (ABS(RANDOM()) % 30) || ' days'), 0
+FROM temp, cte
+ORDER BY RANDOM()
+LIMIT 10000;
+
+-- Drop the temporary table
+DROP TABLE temp;
+"""
+
 # -------------------------
 # CREATE PYSIMPLEGUI LAYOUT
 # -------------------------
