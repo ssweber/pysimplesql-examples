@@ -195,20 +195,11 @@ INSERT INTO Products (Name, Price, Inventory) VALUES
     ('Thingy', 7.00, 130),
     ('Doodadery', 17.00, 70);
 
-INSERT INTO Orders (CustomerID, OrderDate, Completed)
-SELECT CustomerID, DATE('now', '-' || (ABS(RANDOM()) % 30) || ' days'), False
-FROM Customers
-ORDER BY RANDOM() LIMIT 100;
+-- INSERT INTO Orders (CustomerID, OrderDate, Completed)
+-- SELECT CustomerID, DATE('now', '-' || (ABS(RANDOM()) % 30) || ' days'), False
+-- FROM Customers
+-- ORDER BY RANDOM() LIMIT 100;
 
-INSERT INTO OrderDetails (OrderID, ProductID, Quantity)
-SELECT O.OrderID, P.ProductID, (ABS(RANDOM()) % 10) + 1
-FROM Orders O
-JOIN (SELECT ProductID FROM Products ORDER BY RANDOM() LIMIT 25) P
-ON 1=1
-ORDER BY 1;
-"""
-
-"""
 -- Create a temporary table with a single column
 CREATE TEMPORARY TABLE temp(CustomerID INTEGER);
 
@@ -235,7 +226,16 @@ LIMIT 10000;
 
 -- Drop the temporary table
 DROP TABLE temp;
+
+INSERT INTO OrderDetails (OrderID, ProductID, Quantity)
+SELECT O.OrderID, P.ProductID, (ABS(RANDOM()) % 10) + 1
+FROM Orders O
+JOIN (SELECT ProductID FROM Products ORDER BY RANDOM() LIMIT 25) P
+ON 1=1
+ORDER BY 1;
 """
+
+
 
 # -------------------------
 # CREATE PYSIMPLEGUI LAYOUT
@@ -355,7 +355,7 @@ frm["Orders"].set_order_clause("ORDER BY OrderDate ASC")
 # Requery the data since we made changes to the sort order
 frm["Orders"].requery()
 # Set the column order for search operations.
-frm["Orders"].set_search_order(["CustomerID"])
+frm["Orders"].set_search_order(["OrderID"])
 
 # ---------
 # MAIN LOOP
@@ -386,8 +386,9 @@ while True:
             frm.update_selectors("Orders")
             # will need to requery if updating, rather than inserting a new record
             if not row_is_virtual:
+                pk = current_row[dataset.pk_column]
                 dataset.requery(select_first=False)
-                frm.update_elements("OrderDetails")
+                dataset.set_by_pk(pk, skip_prompt_save=True)
     # ----------------------------------------------------
 
     # Display the quick_editor for products and customers
