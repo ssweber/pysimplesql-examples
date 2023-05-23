@@ -222,7 +222,7 @@ INSERT INTO Orders (CustomerID, OrderDate, Completed)
 SELECT temp.CustomerID, DATE('now', '-' || (ABS(RANDOM()) % 30) || ' days'), 0
 FROM temp, cte
 ORDER BY RANDOM()
-LIMIT 10000;
+LIMIT 20000;
 
 -- Drop the temporary table
 DROP TABLE temp;
@@ -344,7 +344,7 @@ frm = ss.Form(
     driver,
     bind_window=win,
     live_update=True,  # this updates the `Selector`, sg.Table as we type in fields.
-)
+)  
 
 # Few more settings
 # -----------------
@@ -380,12 +380,12 @@ while True:
         current_row = dataset.get_current_row()
         # after a product and quantity is entered, save and requery
         if dataset.row_count and current_row["ProductID"] and current_row["Quantity"]:
-            row_is_virtual = dataset.row_is_virtual()
+            pk_is_virtual = dataset.pk_is_virtual()
             dataset.save_record(display_message=False)
             frm["Orders"].requery(select_first=False)
             frm.update_selectors("Orders")
             # will need to requery if updating, rather than inserting a new record
-            if not row_is_virtual:
+            if not pk_is_virtual:
                 pk = current_row[dataset.pk_column]
                 dataset.requery(select_first=False)
                 dataset.set_by_pk(pk, skip_prompt_save=True)
