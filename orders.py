@@ -2,6 +2,7 @@ import logging
 
 import pathlib
 import sys
+
 p = pathlib.Path.cwd().parent
 sys.path.append(f"{str(p)}/pysimplesql/")
 
@@ -216,7 +217,7 @@ WITH RECURSIVE cte AS (
   UNION ALL
   SELECT counter + 1
   FROM cte
-  WHERE counter < 100
+  WHERE counter < 500
 )
 INSERT INTO Orders (CustomerID, OrderDate, Completed)
 SELECT temp.CustomerID, DATE('now', '-' || (ABS(RANDOM()) % 30) || ' days'), 0
@@ -236,7 +237,6 @@ ORDER BY 1;
 """
 
 
-
 # -------------------------
 # CREATE PYSIMPLEGUI LAYOUT
 # -------------------------
@@ -252,11 +252,15 @@ layout = [[sg.Menu(menu_def, key="-MENUBAR-", font="_ 12")]]
 
 # Define the columns for the table selector using the TableHeading class.
 order_heading = ss.TableHeadings(
-    sort_enable=True,  # Click a heading to sort
-    edit_enable=True,  # Double-click a cell to make edits.
-    # Click 💾 in sg.Table Heading to trigger DataSet.save_record()
+    # Click a heading to sort
+    sort_enable=True,
+    # Double-click a cell to make edits.
     # Exempted: Primary Key columns, Generated columns, and columns set as readonly
+    edit_enable=True,
+    # Click 💾 in sg.Table Heading to trigger DataSet.save_record()
     save_enable=True,
+    # Filter rows as you type in the search input
+    apply_search_filter=True,
 )
 
 # Add columns
@@ -275,7 +279,7 @@ layout.append(
         [
             ss.selector(
                 "Orders",
-                sg.Table,
+                ss.LazyTable,
                 num_rows=5,
                 headings=order_heading,
                 row_height=25,
@@ -344,7 +348,7 @@ frm = ss.Form(
     driver,
     bind_window=win,
     live_update=True,  # this updates the `Selector`, sg.Table as we type in fields.
-)  
+)
 
 # Few more settings
 # -----------------
@@ -355,7 +359,7 @@ frm["Orders"].set_order_clause("ORDER BY OrderDate ASC")
 # Requery the data since we made changes to the sort order
 frm["Orders"].requery()
 # Set the column order for search operations.
-frm["Orders"].set_search_order(["OrderID"])
+frm["Orders"].set_search_order(["CustomerID", "OrderID"])
 
 # ---------
 # MAIN LOOP
