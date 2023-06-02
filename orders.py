@@ -23,6 +23,8 @@ logging.basicConfig(level=logging.INFO)
 # -----------------------------
 custom = {
     "ttk_theme": "xpnative",
+    "marker_sort_asc": " ⬇",
+    "marker_sort_desc": " ⬆",
 }
 custom = custom | ss.tp_crystal_remix
 ss.themepack(custom)
