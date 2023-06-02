@@ -64,7 +64,7 @@ CREATE TABLE IF NOT EXISTS OrderDetails (
     "OrderDetailID" INTEGER NOT NULL,
     "OrderID" INTEGER,
     "ProductID" INTEGER NOT NULL,
-    "Quantity" INTEGER,
+    "Quantity" INTEGER NOT NULL,
     "Price" REAL,
     "SubTotal" REAL GENERATED ALWAYS AS ("Price" * "Quantity") STORED,
     FOREIGN KEY ("OrderID") REFERENCES "Orders"("OrderID") ON UPDATE CASCADE ON DELETE CASCADE,
@@ -385,7 +385,12 @@ while True:
         dataset = frm["OrderDetails"]
         current_row = dataset.get_current_row()
         # after a product and quantity is entered, save and requery
-        if dataset.row_count and current_row["ProductID"] and current_row["Quantity"]:
+        print(current_row["ProductID"])
+        if (
+            dataset.row_count
+            and current_row["ProductID"] not in [None, ss.PK_PLACEHOLDER]
+            and current_row["Quantity"]
+        ):
             pk_is_virtual = dataset.pk_is_virtual()
             dataset.save_record(display_message=False)
             frm["Orders"].requery(select_first=False)
@@ -407,6 +412,7 @@ while True:
         frm.save_records()
     # call a Form-level requery
     elif "Requery All" in event:
-        frm.requery_all()
+        #         frm.requery_all()
+        print(win["OrderDetails.Quantity"].get())
     else:
         logger.info(f"This event ({event}) is not yet handled.")
