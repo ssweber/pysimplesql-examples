@@ -58,7 +58,7 @@ def main():
         base64_images[stem] = encoded
         sg.OneLineProgressMeter('Base64 Encoding', i+1, len(namesonly), key='-METER-')
     
-    outfile = open(os.path.join(folder, OUTPUT_FILENAME), 'w')
+    outfile = open(os.path.join(folder, OUTPUT_FILENAME), 'w', encoding='utf-8')
     pp = pprint.PrettyPrinter(indent=4, width=10000, stream=outfile)
     outfile.write('output = ')
     pp.pprint(base64_images)
