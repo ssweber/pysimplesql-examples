@@ -219,7 +219,7 @@ WITH RECURSIVE cte AS (
   UNION ALL
   SELECT counter + 1
   FROM cte
-  WHERE counter < 500
+  WHERE counter < 5
 )
 INSERT INTO Orders (CustomerID, OrderDate, Completed)
 SELECT temp.CustomerID, DATE('now', '-' || (ABS(RANDOM()) % 30) || ' days'), 0
